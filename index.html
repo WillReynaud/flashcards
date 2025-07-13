@@ -52,11 +52,12 @@
             border-radius: 50%;
             z-index: 2;
             cursor: pointer;
-            display: flex; /* Added for centering the icon */
-            justify-content: center; /* Added for centering the icon */
-            align-items: center; /* Added for centering the icon */
-            font-size: 2rem; /* Added for sizing the icon */
-            color: black; /* Added for icon color */
+            /* Ces lignes ont été retirées ou modifiées pour supprimer l'icône */
+            /* display: flex; */
+            /* justify-content: center; */
+            /* align-items: center; */
+            /* font-size: 2rem; */
+            /* color: black; */
         }
         .buttons {
             margin-top: 30px;
@@ -79,8 +80,7 @@
     <div class="container" id="container">
         <div class="card current" id="cardCurrent">...</div>
         <div class="card next" id="cardNext">...</div>
-        <div class="audio-zone" id="audioZone" title="Jouer l’audio">🔊</div>
-    </div>
+        <div class="audio-zone" id="audioZone" title="Jouer l’audio"></div> </div>
 
     <div class="buttons">
         <button id="btnWrong" title="Je ne connais pas">✗</button>
@@ -158,19 +158,19 @@
         }
 
         function playAudio() {
-            console.log("--- playAudio() appelée ---"); // LOG 1: Vérifie si la fonction est appelée
+            console.log("--- playAudio() appelée ---");
             if (cards.length === 0) {
                 console.log("Pas de cartes chargées, impossible de jouer l'audio.");
                 return;
             }
             const character = cards[currentIndex].character;
-            const audioUrl = "audios/" + encodeURIComponent(character) + ".mp3"; // Génère l'URL
-            console.log("URL audio générée :", audioUrl); // LOG 2: Affiche l'URL générée
+            const audioUrl = "audios/" + encodeURIComponent(character) + ".mp3";
+            console.log("URL audio générée :", audioUrl);
 
-            audio.src = audioUrl; // Définit la source audio
-            audio.load(); // Ajouté: S'assure que le navigateur charge la nouvelle source
+            audio.src = audioUrl;
+            audio.load();
             audio.play().catch(err => {
-                console.error("Erreur lors de la lecture de l'audio pour : " + character + " (URL: " + audioUrl + ")", err); // LOG 3: Message d'erreur plus détaillé
+                console.error("Erreur lors de la lecture de l'audio pour : " + character + " (URL: " + audioUrl + ")", err);
                 alert("Pas de fichier audio pour : " + character + " (Erreur: " + err.name + ")");
             });
         }
@@ -190,7 +190,7 @@
                 cards = parseCSV(text);
                 currentIndex = weightedRandomIndex(cards);
                 refreshCards();
-                console.log("Cartes chargées avec succès ! Première carte :", cards[currentIndex]); // LOG 4: Vérifie que les cartes sont chargées
+                console.log("Cartes chargées avec succès ! Première carte :", cards[currentIndex]);
             })
             .catch(err => {
                 cardCurrent.textContent = "Erreur chargement données CSV";

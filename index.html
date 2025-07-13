@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Cartes Chinoises - Swipe & Buttons</title>
+  <title>Cartes Chinoises - Audio Local</title>
   <style>
     html, body {
       margin: 0; padding: 0; height: 100%;
@@ -13,21 +13,16 @@
       background: white;
       font-family: Arial, sans-serif;
       overflow-x: visible;
-      -webkit-tap-highlight-color: transparent;
     }
     body {
       flex-direction: column;
     }
-
     .container {
       position: relative;
       width: 400px;
       height: 400px;
-      overflow: visible;
       user-select: none;
-      touch-action: pan-y;
     }
-
     .card {
       position: absolute;
       top: 0; left: 0;
@@ -40,83 +35,37 @@
       justify-content: center;
       align-items: center;
       font-size: 5rem;
-      cursor: grab;
-      transition: transform 0.3s ease, opacity 0.3s ease;
-      box-sizing: border-box;
       z-index: 1;
-      will-change: transform;
-      user-select: none;
     }
-
     .card.next {
       transform: scale(0.95);
       opacity: 0.3;
       z-index: 0;
     }
-
     .audio-zone {
       position: absolute;
       bottom: 0;
       right: 0;
       width: 60px;
       height: 60px;
-      cursor: pointer;
-      z-index: 2;
-      background: transparent;
-    }
-
-    .buttons {
-      display: flex;
-      justify-content: center;
-      gap: 40px;
-      margin-top: 30px;
-      width: 400px;
-    }
-
-    button {
-      background: none;
-      border: 2px solid black;
+      background: lightgray;
       border-radius: 50%;
+      z-index: 2;
+      cursor: pointer;
+    }
+    .buttons {
+      margin-top: 30px;
+      display: flex;
+      gap: 40px;
+    }
+    button {
       width: 60px;
       height: 60px;
-      font-size: 2.5rem;
-      color: black;
+      font-size: 2rem;
+      border-radius: 50%;
+      border: 2px solid black;
+      background: white;
       cursor: pointer;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 0;
-      user-select: none;
-      transition: background-color 0.2s ease;
-    }
-
-    button:active {
-      background-color: #eee;
-    }
-
-    #btnWrong::before {
-      content: '✗';
-    }
-    #btnRight::before {
-      content: '✓';
-    }
-
-    .pinyin-text {
-    font-size: 3rem; /* taille réduite pour pinyin */
-    }
-
-    .translation-text {
-    font-size: 2.5rem; /* taille encore plus réduite pour traduction */
-    }
-
-    @media (max-width: 768px) {
-      .buttons {
-        display: none;
-      }
-      .container {
-        width: 90vw;
-        height: 90vw;
-      }
     }
   </style>
 </head>
@@ -125,12 +74,12 @@
   <div class="container" id="container">
     <div class="card current" id="cardCurrent">...</div>
     <div class="card next" id="cardNext">...</div>
-    <div class="audio-zone" id="audioZone" title="Jouer l’audio"></div>
+    <div class="audio-zone" id="audioZone" title="Jouer l’audio">🔊</div>
   </div>
 
   <div class="buttons">
-    <button id="btnWrong" aria-label="Pas validé"></button>
-    <button id="btnRight" aria-label="Validé"></button>
+    <button id="btnWrong" title="Je ne connais pas">✗</button>
+    <button id="btnRight" title="Je connais">✓</button>
   </div>
 
   <script>
@@ -138,9 +87,7 @@
 
     let cards = [];
     let currentIndex = 0;
-    let displayState = 0; // 0=caractère, 1=pinyin, 2=traduction
-
-    const maxFamiliarity = 5;
+    let displayState = 0;
 
     const cardCurrent = document.getElementById("cardCurrent");
     const cardNext = document.getElementById("cardNext");
@@ -151,70 +98,54 @@
     let audio = new Audio();
 
     function parseCSV(text) {
-      const lines = text.trim().split('\n');
+      const lines = text.trim().split("\n");
       return lines.map(line => {
-        const parts = line.split(',');
+        const [character, pinyin, translation] = line.split(",");
         return {
-          character: parts[0],
-          pinyin: parts[1],
-          translation: parts[2],
-          audioUrl: parts[3] || null,
-          familiarity: 0  // initialisation du score
+          character,
+          pinyin,
+          translation,
+          familiarity: 0
         };
       });
     }
 
     function displayCard(index, element) {
-  if(cards.length === 0) {
-    element.textContent = "Aucune carte";
-    return;
-  }
-  const card = cards[index];
-  
-  // Reset classes de taille
-  element.classList.remove("pinyin-text", "translation-text");
-  
-  if(displayState === 0) {
-    element.textContent = card.character;
-  } else if(displayState === 1) {
-    element.textContent = card.pinyin;
-    element.classList.add("pinyin-text");
-  } else {
-    element.textContent = card.translation;
-    element.classList.add("translation-text");
-  }
+      if (cards.length === 0) {
+        element.textContent = "Aucune carte";
+        return;
+      }
+      const card = cards[index];
+      if (displayState === 0) {
+        element.textContent = card.character;
+      } else if (displayState === 1) {
+        element.textContent = card.pinyin;
+      } else {
+        element.textContent = card.translation;
+      }
     }
 
     function refreshCards() {
-      displayState = 0; // reset l'état d'affichage quand on change de carte
+      displayState = 0;
       displayCard(currentIndex, cardCurrent);
-      cardNext.textContent = "..."; // <-- Toujours 3 points ici jusqu'à swipe validé
-      // reset styles pour pile cartes
-      cardCurrent.style.transition = "none";
-      cardCurrent.style.transform = "translateX(0) rotate(0)";
-      cardNext.style.transition = "none";
-      cardNext.style.transform = "scale(0.95)";
-      cardNext.style.opacity = "0.3";
+      cardNext.textContent = "...";
     }
 
-    // Tirage pondéré par familiarity
     function weightedRandomIndex(cards) {
-      const weights = cards.map(c => (maxFamiliarity + 1) - (c.familiarity || 0));
-      const totalWeight = weights.reduce((a, b) => a + b, 0);
-      let random = Math.random() * totalWeight;
-      for(let i = 0; i < cards.length; i++) {
-        if(random < weights[i]) return i;
-        random -= weights[i];
+      const weights = cards.map(c => 6 - (c.familiarity || 0));
+      const total = weights.reduce((a, b) => a + b, 0);
+      let r = Math.random() * total;
+      for (let i = 0; i < cards.length; i++) {
+        if (r < weights[i]) return i;
+        r -= weights[i];
       }
       return 0;
     }
 
-    // nextCard met à jour la familiarity selon "known" (bool)
     function nextCard(known) {
-      if(cards.length === 0) return;
-      if(known === true) {
-        cards[currentIndex].familiarity = Math.min(cards[currentIndex].familiarity + 1, maxFamiliarity);
-      } else if(known === false) {
+      if (known) {
+        cards[currentIndex].familiarity = Math.min(cards[currentIndex].familiarity + 1, 5);
+      } else {
         cards[currentIndex].familiarity = Math.max(cards[currentIndex].familiarity - 1, 0);
       }
       currentIndex = weightedRandomIndex(cards);
@@ -222,91 +153,38 @@
     }
 
     function playAudio() {
-      if(cards.length === 0) return;
-      const audioUrl = cards[currentIndex].audioUrl;
-      if(audioUrl) {
+        if (cards.length === 0) return;
+        const character = cards[currentIndex].character;
+        const audioUrl = "audios/" + encodeURIComponent(character) + ".mp3";
+
         audio.src = audioUrl;
-        audio.play();
-      }
-    }
+        audio.play().catch(err => {
+    console.error("Audio non disponible pour : " + character, err);
+    alert("Pas de fichier audio pour : " + character);
+  });
+}
 
-    audioZone.addEventListener('click', e => {
-      e.stopPropagation();
-      playAudio();
-    });
-
-    cardCurrent.addEventListener('click', () => {
+    audioZone.addEventListener("click", playAudio);
+    cardCurrent.addEventListener("click", () => {
       displayState = (displayState + 1) % 3;
       displayCard(currentIndex, cardCurrent);
     });
 
-    btnRight.addEventListener('click', () => nextCard(true));
-    btnWrong.addEventListener('click', () => nextCard(false));
+    btnRight.addEventListener("click", () => nextCard(true));
+    btnWrong.addEventListener("click", () => nextCard(false));
 
-    // Swipe / drag
-    let startX = 0;
-    let isDragging = false;
-
-    cardCurrent.addEventListener('pointerdown', e => {
-      startX = e.clientX || e.touches?.[0]?.clientX;
-      isDragging = true;
-      cardCurrent.style.transition = 'none';
-      cardCurrent.setPointerCapture(e.pointerId);
-    });
-
-    cardCurrent.addEventListener('pointermove', e => {
-      if(!isDragging) return;
-      const currentX = e.clientX || e.touches?.[0]?.clientX;
-      let deltaX = currentX - startX;
-
-      cardCurrent.style.transform = `translateX(${deltaX}px) rotate(${deltaX * 0.1}deg)`;
-
-      if(Math.abs(deltaX) > 30) {
-        cardNext.style.transform = 'scale(1)';
-        cardNext.style.opacity = '0.7';
-      } else {
-        cardNext.style.transform = 'scale(0.95)';
-        cardNext.style.opacity = '0.3';
-      }
-    });
-
-    cardCurrent.addEventListener('pointerup', e => {
-      if(!isDragging) return;
-      isDragging = false;
-      cardCurrent.style.transition = 'transform 0.3s ease';
-
-      const endX = e.clientX || e.changedTouches?.[0]?.clientX;
-      let deltaX = endX - startX;
-
-      if(deltaX > 100) {
-        cardCurrent.style.transform = `translateX(1000px) rotate(45deg)`;
-        setTimeout(() => nextCard(true), 300);
-      } else if(deltaX < -100) {
-        cardCurrent.style.transform = `translateX(-1000px) rotate(-45deg)`;
-        setTimeout(() => nextCard(false), 300);
-      } else {
-        cardCurrent.style.transform = 'translateX(0) rotate(0)';
-        cardNext.style.transform = 'scale(0.95)';
-        cardNext.style.opacity = '0.3';
-      }
-      cardCurrent.releasePointerCapture(e.pointerId);
-    });
-
-    // Charge CSV et initialise
     fetch(SHEET_CSV_URL)
-      .then(res => {
-        if(!res.ok) throw new Error("Erreur chargement CSV");
-        return res.text();
-      })
+      .then(r => r.text())
       .then(text => {
         cards = parseCSV(text);
-        currentIndex = weightedRandomIndex(cards);  // Tirage pondéré au départ
+        currentIndex = weightedRandomIndex(cards);
         refreshCards();
       })
       .catch(err => {
-        cardCurrent.textContent = "Erreur de chargement";
+        cardCurrent.textContent = "Erreur chargement données";
         console.error(err);
       });
   </script>
+
 </body>
 </html>

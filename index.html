@@ -22,7 +22,6 @@
             width: 400px;
             height: 400px;
             user-select: none;
-            touch-action: none; /* Empêche le défilement de la page lors du swipe */
         }
         .card {
             position: absolute;
@@ -37,27 +36,12 @@
             align-items: center;
             font-size: 5rem;
             z-index: 1;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease-out, opacity 0.3s ease-out; /* Ajout des transitions */
         }
         .card.next {
             transform: scale(0.95);
             opacity: 0.3;
             z-index: 0;
         }
-        /* Styles pour le swipe */
-        .card.swiping {
-            transition: none; /* Pas de transition pendant le swipe */
-        }
-        .card.swipe-right {
-            transform: translateX(500px) rotate(15deg);
-            opacity: 0;
-        }
-        .card.swipe-left {
-            transform: translateX(-500px) rotate(-15deg);
-            opacity: 0;
-        }
-
         .audio-zone {
             position: absolute;
             bottom: 0;
@@ -68,6 +52,12 @@
             border-radius: 50%;
             z-index: 2;
             cursor: pointer;
+            /* J'ai gardé les styles que j'avais ajoutés pour l'icône, au cas où tu voudrais la remettre facilement */
+            /* display: flex; */
+            /* justify-content: center; */
+            /* align-items: center; */
+            /* font-size: 2rem; */
+            /* color: black; */
         }
         .buttons {
             margin-top: 30px;
@@ -82,17 +72,6 @@
             border: 2px solid black;
             background: white;
             cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: background-color 0.2s ease;
-        }
-        button:hover {
-            background-color: #f0f0f0;
-        }
-        button#btnRight:hover {
-            background-color: #d4edda; /* Vert clair */
-        }
-        button#btnWrong:hover {
-            background-color: #f8d7da; /* Rouge clair */
         }
     </style>
 </head>
@@ -101,8 +80,7 @@
     <div class="container" id="container">
         <div class="card current" id="cardCurrent">...</div>
         <div class="card next" id="cardNext">...</div>
-        <div class="audio-zone" id="audioZone" title="Jouer l’audio"></div>
-    </div>
+        <div class="audio-zone" id="audioZone" title="Jouer l’audio"></div> </div>
 
     <div class="buttons">
         <button id="btnWrong" title="Je ne connais pas">✗</button>
@@ -114,27 +92,19 @@
 
         let cards = [];
         let currentIndex = 0;
-        let displayState = 0; // 0: character, 1: pinyin, 2: translation
+        let displayState = 0;
 
         const cardCurrent = document.getElementById("cardCurrent");
         const cardNext = document.getElementById("cardNext");
         const btnRight = document.getElementById("btnRight");
         const btnWrong = document.getElementById("btnWrong");
         const audioZone = document.getElementById("audioZone");
-        const container = document.getElementById("container"); // Ajouté pour le swipe
 
         let audio = new Audio();
 
-        // Variables pour le swipe
-        let isSwiping = false;
-        let startX = 0;
-        let currentX = 0;
-
-        // --- Fonctions de gestion des cartes et données ---
-
         function parseCSV(text) {
             const lines = text.trim().split("\n");
-            // Filtrer les lignes vides ou les en-têtes si nécessaire
+            // Ajout du filtre pour ignorer l'en-tête et les lignes vides
             return lines.filter(line => line.trim() !== '' && !line.startsWith('character,pinyin,translation')).map(line => {
                 const [character, pinyin, translation] = line.split(",");
                 return {
@@ -146,70 +116,54 @@
             });
         }
 
-        function displayCardContent(index, element, state) {
+        function displayCard(index, element) {
             if (cards.length === 0) {
                 element.textContent = "Aucune carte";
                 return;
             }
             const card = cards[index];
-            if (!card) { // Gérer le cas où l'index est invalide
+            if (!card) { // Ajout d'une vérification pour un index invalide
                 element.textContent = "Carte introuvable";
                 return;
             }
-
-            if (state === 0) {
+            if (displayState === 0) {
                 element.textContent = card.character;
-            } else if (state === 1) {
+            } else if (displayState === 1) {
                 element.textContent = card.pinyin;
-            } else { // state === 2
+            } else {
                 element.textContent = card.translation;
             }
         }
 
-        function refreshCardsDisplay() {
-            displayState = 0; // Réinitialise l'affichage au caractère principal
-            displayCardContent(currentIndex, cardCurrent, displayState);
-            // La carte suivante n'affiche pas son contenu complet initialement
-            cardNext.textContent = "...";
-            // Réinitialise les styles de la carte actuelle
-            cardCurrent.style.transform = 'translate(0px) rotate(0deg)';
-            cardCurrent.style.opacity = '1';
-            cardCurrent.classList.remove('swiping', 'swipe-right', 'swipe-left');
-
-            // Met à jour la carte "next" (légèrement en arrière-plan)
-            // Trouve l'index de la prochaine carte à afficher, pas forcément le suivant direct
-            const nextCardIndex = weightedRandomIndex(cards); // Pourrait être le même que currentIndex si les poids sont très élevés
-            displayCardContent(nextCardIndex, cardNext, 0); // Affiche le caractère de la prochaine carte
+        function refreshCards() {
+            displayState = 0;
+            displayCard(currentIndex, cardCurrent);
+            cardNext.textContent = "..."; // La carte suivante reste cachée
         }
 
         function weightedRandomIndex(cards) {
-            if (cards.length === 0) return 0;
-            const weights = cards.map(c => 6 - (c.familiarity || 0)); // Plus la familiarité est faible, plus le poids est élevé
+            if (cards.length === 0) return 0; // Gérer le cas où il n'y a pas de cartes
+            const weights = cards.map(c => 6 - (c.familiarity || 0));
             const total = weights.reduce((a, b) => a + b, 0);
             let r = Math.random() * total;
             for (let i = 0; i < cards.length; i++) {
                 if (r < weights[i]) return i;
                 r -= weights[i];
             }
-            return 0; // Fallback
+            return 0; // Fallback au cas où quelque chose se passerait mal
         }
 
-        function advanceCard(known) {
-            if (cards.length === 0) return;
+        function nextCard(known) {
+            if (cards.length === 0) return; // S'assurer qu'il y a des cartes avant d'avancer
 
-            // Met à jour la familiarité de la carte actuelle
             if (known) {
                 cards[currentIndex].familiarity = Math.min(cards[currentIndex].familiarity + 1, 5);
             } else {
                 cards[currentIndex].familiarity = Math.max(cards[currentIndex].familiarity - 1, 0);
             }
-
-            // Sélectionne la nouvelle carte
             currentIndex = weightedRandomIndex(cards);
-            refreshCardsDisplay(); // Met à jour l'affichage
+            refreshCards();
         }
-
-        // --- Fonctions audio ---
 
         function playAudio() {
             console.log("--- playAudio() appelée ---");
@@ -219,97 +173,30 @@
                 return;
             }
             const character = cards[currentIndex].character;
-            const audioUrl = "audios/" + encodeURIComponent(character) + ".mp3"; // Encode le caractère pour l'URL
-            console.log("URL audio générée :", audioUrl);
+            const audioUrl = "audios/" + encodeURIComponent(character) + ".mp3";
+            console.log("URL audio essayée :", audioUrl);
 
             audio.src = audioUrl;
-            audio.load(); // Charge la nouvelle source
+            audio.load(); // Ajouté: S'assure que le navigateur charge la nouvelle source
             audio.play().catch(err => {
                 console.error("Erreur lors de la lecture de l'audio pour : " + character + " (URL: " + audioUrl + ")", err);
-                // Alert plus informative pour l'utilisateur
                 alert(`Impossible de jouer l'audio pour "${character}". Vérifiez si le fichier "${character}.mp3" existe dans le dossier 'audios' et si son nom correspond.`);
             });
         }
 
-        // --- Fonctions de swipe ---
-
-        function startSwipe(e) {
-            isSwiping = true;
-            // Stocke la position de départ (pour souris ou toucher)
-            startX = (e.touches ? e.touches[0].clientX : e.clientX);
-            cardCurrent.classList.add('swiping'); // Pour désactiver la transition CSS pendant le swipe
-        }
-
-        function duringSwipe(e) {
-            if (!isSwiping) return;
-
-            // Calcule la position actuelle et le delta
-            currentX = (e.touches ? e.touches[0].clientX : e.clientX);
-            const deltaX = currentX - startX;
-
-            // Applique la transformation à la carte actuelle
-            cardCurrent.style.transform = `translateX(${deltaX}px) rotate(${deltaX / 20}deg)`; // Fait tourner la carte un peu
-            cardCurrent.style.opacity = 1 - Math.abs(deltaX) / (container.offsetWidth * 0.8); // Réduit l'opacité
-
-            // Empêche le défilement de la page sur mobile
-            e.preventDefault();
-        }
-
-        function endSwipe(e) {
-            if (!isSwiping) return;
-            isSwiping = false;
-
-            const deltaX = currentX - startX;
-            const threshold = container.offsetWidth / 4; // Seuil pour considérer un swipe valide (ex: 25% de la largeur du conteneur)
-
-            cardCurrent.classList.remove('swiping'); // Réactive la transition CSS
-
-            if (deltaX > threshold) {
-                // Swipe vers la droite (connu)
-                cardCurrent.classList.add('swipe-right');
-                setTimeout(() => advanceCard(true), 300); // Avance après l'animation de sortie
-            } else if (deltaX < -threshold) {
-                // Swipe vers la gauche (non connu)
-                cardCurrent.classList.add('swipe-left');
-                setTimeout(() => advanceCard(false), 300); // Avance après l'animation de sortie
-            } else {
-                // Pas assez glissé, retourne la carte à sa position initiale
-                cardCurrent.style.transform = 'translate(0px) rotate(0deg)';
-                cardCurrent.style.opacity = '1';
-            }
-        }
-
-        // --- Écouteurs d'événements ---
-
         audioZone.addEventListener("click", playAudio);
-
-        // Au clic sur la carte, affiche l'information suivante
         cardCurrent.addEventListener("click", () => {
             displayState = (displayState + 1) % 3;
-            displayCardContent(currentIndex, cardCurrent, displayState);
+            displayCard(currentIndex, cardCurrent);
         });
 
-        // Boutons de navigation
-        btnRight.addEventListener("click", () => advanceCard(true));
-        btnWrong.addEventListener("click", () => advanceCard(false));
-
-        // Événements pour le swipe (souris)
-        cardCurrent.addEventListener("mousedown", startSwipe);
-        window.addEventListener("mousemove", duringSwipe); // Écoute sur la fenêtre pour ne pas perdre l'événement si la souris sort de la carte
-        window.addEventListener("mouseup", endSwipe);
-
-        // Événements pour le swipe (toucher sur mobile)
-        cardCurrent.addEventListener("touchstart", startSwipe);
-        window.addEventListener("touchmove", duringSwipe);
-        window.addEventListener("touchend", endSwipe);
-
-
-        // --- Initialisation ---
+        btnRight.addEventListener("click", () => nextCard(true));
+        btnWrong.addEventListener("click", () => nextCard(false));
 
         fetch(SHEET_CSV_URL)
             .then(r => {
-                if (!r.ok) {
-                    throw new Error(`Erreur HTTP: ${r.status}`);
+                if (!r.ok) { // Vérifie si la réponse HTTP est OK (statut 200)
+                    throw new Error(`Erreur HTTP: ${r.status} - Impossible de charger le CSV.`);
                 }
                 return r.text();
             })
@@ -317,16 +204,16 @@
                 cards = parseCSV(text);
                 if (cards.length > 0) {
                     currentIndex = weightedRandomIndex(cards);
-                    refreshCardsDisplay();
-                    console.log("Cartes chargées avec succès ! Première carte affichée :", cards[currentIndex]);
+                    refreshCards();
+                    console.log("Cartes chargées avec succès ! Première carte :", cards[currentIndex]);
                 } else {
-                    cardCurrent.textContent = "Aucune carte trouvée dans le CSV.";
-                    console.warn("Le fichier CSV est vide ou n'a pas pu être parsé.");
+                    cardCurrent.textContent = "Aucune carte trouvée dans le CSV ou erreur de parsing.";
+                    console.warn("Le fichier CSV est vide ou n'a pas pu être parsé correctement.");
                 }
             })
             .catch(err => {
                 cardCurrent.textContent = "Erreur chargement données CSV";
-                console.error("Erreur de chargement du CSV ou de parsing :", err);
+                console.error("Erreur de chargement ou de traitement du CSV :", err);
             });
     </script>
 

@@ -14,34 +14,59 @@
             margin: 0;
             background-color: #f0f2f5;
             color: #333;
-            overflow: hidden; /* Prevent scroll on swipe */
+            overflow: hidden; /* Prevent scrollbars */
         }
 
-        #flashcard-container {
+        #flashcard-stack {
             width: 90vw;
             max-width: 500px;
             height: 60vh;
             max-height: 400px;
-            perspective: 1000px; /* For 3D flip effect */
-            display: flex;
+            position: relative; /* Container for stacked cards */
+            display: flex; /* To center the cards within the stack */
             justify-content: center;
             align-items: center;
-            user-select: none; /* Prevent text selection */
-            -webkit-user-select: none; /* Safari */
-            -moz-user-select: none; /* Firefox */
-            -ms-user-select: none; /* IE10+ */
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         .flashcard {
             width: 100%;
             height: 100%;
-            position: relative;
-            transform-style: preserve-3d;
-            transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+            position: absolute; /* Stack them on top of each other */
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            cursor: grab; /* Indicate draggable */
             background-color: #fff;
+            overflow: hidden;
+            transition: transform 0.3s ease-out, box-shadow 0.3s ease, opacity 0.3s ease; 
+            transform-origin: center center; /* Ensure rotation around center */
+        }
+
+        /* Styles for stacked effect */
+        .flashcard:nth-child(2) { 
+            transform: translateY(calc(10px + 1vw)) scale(0.95);
+            opacity: 0.8;
+            z-index: 0; 
+        }
+        .flashcard:nth-child(3) { 
+            transform: translateY(calc(20px + 2vw)) scale(0.90);
+            opacity: 0.6;
+            z-index: -1; 
+        }
+
+        .flashcard.active {
+            z-index: 1; 
+            cursor: grab;
+        }
+
+        .flashcard-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -49,58 +74,48 @@
             padding: 20px;
             box-sizing: border-box;
             text-align: center;
-            overflow: hidden; /* For hidden audio zone */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out; 
+            color: #000; 
         }
 
-        .flashcard.flipped {
-            transform: rotateY(180deg);
+        .flashcard-content.active-display {
+            opacity: 1;
+            visibility: visible;
         }
 
-        .flashcard-content {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        .flashcard-front {
-            font-size: 8em; /* Large character */
+        .flashcard-front h2 {
+            font-size: clamp(4em, 10vw, 8em);
             font-weight: bold;
-            color: #4CAF50;
         }
 
-        .flashcard-middle {
-            transform: rotateY(180deg);
-            font-size: 3em; /* Pinyin */
-            color: #2196F3;
+        .flashcard-middle h2 {
+            font-size: clamp(2em, 5vw, 3em);
         }
 
-        .flashcard-back {
-            transform: rotateY(180deg);
-            font-size: 2.5em; /* Translation */
-            color: #FF9800;
+        .flashcard-back h2 {
+            font-size: clamp(1.8em, 4vw, 2.5em);
         }
 
         .flashcard-content h2 {
             margin: 0;
             line-height: 1.2;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            white-space: normal;
+            padding: 10px;
+            color: #000; 
         }
 
-        #audio-zone {
+        .audio-zone { 
             position: absolute;
             bottom: 0;
             right: 0;
-            width: 30%; /* Adjust size of clickable zone */
-            height: 30%; /* Adjust size of clickable zone */
+            width: 30%;
+            height: 30%;
             cursor: pointer;
-            z-index: 10; /* Ensure it's above other content */
-            /* background-color: rgba(0, 0, 255, 0.1); /* For debugging, remove in production */
+            z-index: 10; 
         }
 
         #feedback {
@@ -126,29 +141,164 @@
             color: #F44336;
             transform: translateY(0);
         }
+
+        /* --- Overlay Styles --- */
+        #score-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: flex-end; /* Align modal to bottom */
+            z-index: 200;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+
+        #score-overlay.visible {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        #score-modal {
+            background-color: #fff;
+            border-top-left-radius: 20px; /* Rounded top corners */
+            border-top-right-radius: 20px;
+            padding: 30px;
+            width: 100%; /* Full width at bottom */
+            max-width: 800px;
+            height: 80vh; /* Takes 80% of screen height */
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; 
+
+            /* Initial state for slide-up animation */
+            transform: translateY(100%); 
+            transition: transform 0.3s ease-out;
+        }
+
+        #score-overlay.visible #score-modal {
+            transform: translateY(0%); /* Slide up to visible position */
+        }
+
+        #score-modal h3 {
+            text-align: center;
+            margin-top: 0;
+            color: #333;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+
+        #score-columns {
+            display: flex;
+            flex-grow: 1; 
+            gap: 20px;
+            overflow-y: auto; 
+        }
+
+        .score-column {
+            flex: 1;
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto; 
+        }
+
+        .score-column.mastered {
+            background-color: #e6ffe6; 
+            border: 1px solid #4CAF50;
+        }
+
+        .score-column.medium {
+            background-color: #fff8e1; 
+            border: 1px solid #FFC107;
+        }
+
+        .score-column.not-mastered {
+            background-color: #ffe6e6; 
+            border: 1px solid #F44336;
+        }
+
+        .score-column h4 {
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            color: #333;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dotted #ccc;
+            font-size: 1em;
+        }
+
+        .score-item:last-child {
+            border-bottom: none;
+        }
+
+        .score-char {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .score-details {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        /* Home Indicator Bar */
+        #home-indicator-bar {
+            position: fixed;
+            bottom: 8px; /* A little bit from the very bottom */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 130px; /* Standard iPhone bar width */
+            height: 5px; /* Standard iPhone bar height */
+            background-color: #000;
+            border-radius: 100px; /* Fully rounded corners */
+            z-index: 150; /* Above cards, below overlay */
+            cursor: grab;
+        }
     </style>
 </head>
 <body>
     <div id="feedback"></div>
-    <div id="flashcard-container">
-        <div class="flashcard" id="flashcard">
-            <div class="flashcard-content flashcard-front" data-card-side="front">
-                <h2 id="character"></h2>
-            </div>
-            <div class="flashcard-content flashcard-middle" data-card-side="middle">
-                <h2 id="pinyin"></h2>
-            </div>
-            <div class="flashcard-content flashcard-back" data-card-side="back">
-                <h2 id="translation"></h2>
-            </div>
-            <div id="audio-zone"></div>
+    <div id="flashcard-stack">
         </div>
-    </div>
 
     <audio id="audio-player"></audio>
 
+    <div id="home-indicator-bar"></div>
+
+    <div id="score-overlay">
+        <div id="score-modal">
+            <h3>Votre Progression</h3>
+            <div id="score-columns">
+                <div class="score-column not-mastered">
+                    <h4>À Travailler (0-1)</h4>
+                </div>
+                <div class="score-column medium">
+                    <h4>À Revoir (2-3)</h4>
+                </div>
+                <div class="score-column mastered">
+                    <h4>Maîtrisé (4-5)</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Data for flashcards
         const flashcardsData = [
             { char: "我", pinyin: "wǒ", translation: "je / moi" },
             { char: "你", pinyin: "nǐ", translation: "tu / toi" },
@@ -221,7 +371,7 @@
             { char: "几", pinyin: "jǐ", translation: "combien (petit nombre / heure / âge)" },
             { char: "今天", pinyin: "jīntiān", translation: "aujourd'hui" },
             { char: "明天", pinyin: "míngtiān", translation: "demain" },
-            { char: "昨天", pinyin: "zuótiān", translation: "hier" },
+            { char: "昨天", pinyin: "zuótiānhier", translation: "hier" },
             { char: "上午", pinyin: "shàngwǔ", translation: "matin" },
             { char: "中午", pinyin: "zhōngwǔ", translation: "midi" },
             { char: "下午", pinyin: "xiàwǔ", translation: "après-midi" },
@@ -285,9 +435,9 @@
             { char: "汽车", pinyin: "qìchē", translation: "voiture" },
             { char: "自行车", pinyin: "zìxíngchē", translation: "vélo" },
             { char: "国", pinyin: "guó", translation: "pays" },
-            { char: "人口", pinyin: "rénkǒu", translation: "population" },
-            { char: "北方人", pinyin: "běifāngrén", translation: "gens du nord" },
-            { char: "南方人", pinyin: "nánfāngrén", translation: "gens du sud" },
+            { char: "人口", pinyin: "rénkǒupopulation", translation: "population" },
+            { char: "北方人", pinyin: "běifāngréngens", translation: "gens du nord" },
+            { char: "南方人", pinyin: "nánfāngréngens", translation: "gens du sud" },
             { char: "中", pinyin: "zhōng", translation: "au centre / milieu" },
             { char: "北", pinyin: "běi", translation: "nord" },
             { char: "南", pinyin: "nán", translation: "sud" },
@@ -301,39 +451,28 @@
             { char: "奶", pinyin: "nǎi", translation: "lait" }
         ];
 
-        // Initialize scores for weighted random selection (0 to 5)
-        // 0 = needs more practice, 5 = mastered
-        const cardScores = new Array(flashcardsData.length).fill(2); // Start all at 2 (neutral)
+        const cardScores = new Array(flashcardsData.length).fill(2); 
         const SCORE_MAX = 5;
         const SCORE_MIN = 0;
+        const NUM_CARDS_IN_STACK = 3; 
 
-        const flashcard = document.getElementById('flashcard');
-        const characterDisplay = document.getElementById('character');
-        const pinyinDisplay = document.getElementById('pinyin');
-        const translationDisplay = document.getElementById('translation');
-        const audioZone = document.getElementById('audio-zone');
+        const flashcardStack = document.getElementById('flashcard-stack');
         const audioPlayer = document.getElementById('audio-player');
         const feedbackDisplay = document.getElementById('feedback');
-
-        let currentCardIndex = -1;
-        let cardSide = 'front'; // 'front', 'middle', 'back'
-
-        // Swipe variables
-        let startX = 0;
-        let startY = 0;
-        let isDragging = false;
+        const scoreOverlay = document.getElementById('score-overlay');
+        const homeIndicatorBar = document.getElementById('home-indicator-bar');
+        
+        let cardDataQueue = []; 
 
         function showFeedback(message, type) {
             feedbackDisplay.textContent = message;
             feedbackDisplay.className = 'show ' + type;
             setTimeout(() => {
                 feedbackDisplay.className = '';
-            }, 1000); // Hide after 1 second
+            }, 1000);
         }
 
         function getWeightedRandomCardIndex() {
-            // Create a temporary array where each card appears (SCORE_MAX - score + 1) times
-            // Cards with lower scores appear more frequently.
             let weightedIndexes = [];
             for (let i = 0; i < flashcardsData.length; i++) {
                 const weight = SCORE_MAX - cardScores[i] + 1;
@@ -341,194 +480,430 @@
                     weightedIndexes.push(i);
                 }
             }
+            if (weightedIndexes.length === 0 && flashcardsData.length > 0) {
+                 return Math.floor(Math.random() * flashcardsData.length);
+            } else if (flashcardsData.length === 0) {
+                return -1;
+            }
             const randomIndex = Math.floor(Math.random() * weightedIndexes.length);
             return weightedIndexes[randomIndex];
         }
 
-        function loadCard(index) {
-            currentCardIndex = index;
-            const card = flashcardsData[currentCardIndex];
-            characterDisplay.textContent = card.char;
-            pinyinDisplay.textContent = card.pinyin;
-            translationDisplay.textContent = card.translation;
-            audioPlayer.src = `audio/${card.char}.mp3`;
-
-            // Reset card to front view
-            flashcard.classList.remove('flipped');
-            characterDisplay.parentNode.style.zIndex = 3;
-            pinyinDisplay.parentNode.style.zIndex = 2;
-            translationDisplay.parentNode.style.zIndex = 1;
-            cardSide = 'front';
+        function fillCardQueue() {
+            while (cardDataQueue.length < NUM_CARDS_IN_STACK + 1) { 
+                let newIndex = getWeightedRandomCardIndex();
+                if (newIndex !== -1) {
+                    const displayedCardDataIndices = Array.from(flashcardStack.children).map(cardEl => parseInt(cardEl.dataset.cardDataIndex));
+                    if (!displayedCardDataIndices.includes(newIndex)) {
+                        cardDataQueue.push(newIndex);
+                    } else {
+                        let foundUnique = false;
+                        for(let i = 0; i < flashcardsData.length; i++) {
+                            if (!displayedCardDataIndices.includes(i) && !cardDataQueue.includes(i)) {
+                                newIndex = i;
+                                cardDataQueue.push(newIndex);
+                                foundUnique = true;
+                                break;
+                            }
+                        }
+                        if (!foundUnique) {
+                            console.warn("Could not find a unique card to add to queue.");
+                            break;
+                        }
+                    }
+                } else {
+                    console.warn("No more cards to add to queue.");
+                    break;
+                }
+            }
         }
 
-        function nextCard() {
-            loadCard(getWeightedRandomCardIndex());
+
+        function createFlashcardElement(cardDataIndex, domIndex) {
+            const flashcardDiv = document.createElement('div');
+            flashcardDiv.classList.add('flashcard');
+            flashcardDiv.id = `flashcard-${domIndex}`;
+            flashcardDiv.dataset.cardDataIndex = cardDataIndex; 
+
+            const cardContents = ['front', 'middle', 'back'];
+            const cardValues = [
+                flashcardsData[cardDataIndex].char,
+                flashcardsData[cardDataIndex].pinyin,
+                flashcardsData[cardDataIndex].translation
+            ];
+
+            cardContents.forEach((type, i) => {
+                const contentDiv = document.createElement('div');
+                contentDiv.classList.add('flashcard-content', `flashcard-${type}`);
+                contentDiv.id = `card-${domIndex}-${type}`;
+                const h2 = document.createElement('h2');
+                h2.textContent = cardValues[i];
+                contentDiv.appendChild(h2);
+                flashcardDiv.appendChild(contentDiv);
+            });
+
+            const audioZoneDiv = document.createElement('div');
+            audioZoneDiv.classList.add('audio-zone'); 
+            flashcardDiv.appendChild(audioZoneDiv);
+
+            return flashcardDiv;
         }
 
+        function initializeCardStack() {
+            fillCardQueue();
+            flashcardStack.innerHTML = ''; 
+            for (let i = 0; i < NUM_CARDS_IN_STACK; i++) {
+                if (cardDataQueue.length > i) {
+                    const cardElement = createFlashcardElement(cardDataQueue[i], i);
+                    flashcardStack.appendChild(cardElement);
+                }
+            }
+            if (flashcardStack.children.length > 0) {
+                flashcardStack.children[0].classList.add('active');
+                updateDisplayStage(flashcardStack.children[0], 0); 
+            }
+            addEventListenersToActiveCard();
+        }
+
+        function swipeCard(direction, onComplete) {
+            const activeCard = flashcardStack.querySelector('.flashcard.active');
+            if (!activeCard) return;
+
+            removeEventListenersFromActiveCard(); 
+
+            const swipedCardDataIndex = parseInt(activeCard.dataset.cardDataIndex);
+
+            activeCard.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out'; 
+            let rotation = direction === 'right' ? 'rotate(10deg)' : 'rotate(-10deg)';
+            let translateX = direction === 'right' ? '150%' : '-150%';
+            activeCard.style.transform = `translateX(${translateX}) translateY(0) ${rotation}`;
+            activeCard.style.opacity = '0';
+            activeCard.classList.remove('active');
+
+            if (swipedCardDataIndex !== undefined && swipedCardDataIndex !== -1) {
+                 if (direction === 'right') {
+                    if (cardScores[swipedCardDataIndex] < SCORE_MAX) cardScores[swipedCardDataIndex]++;
+                    showFeedback('Bravo !', 'correct');
+                 } else { 
+                    if (cardScores[swipedCardDataIndex] > SCORE_MIN) cardScores[swipedCardDataIndex]--;
+                    showFeedback('À revoir !', 'incorrect');
+                 }
+            }
+            
+            activeCard.addEventListener('transitionend', () => {
+                activeCard.remove(); 
+
+                cardDataQueue.shift(); 
+                fillCardQueue(); 
+
+                if (cardDataQueue.length > NUM_CARDS_IN_STACK - 1) { 
+                    const newCardDataIndex = cardDataQueue[NUM_CARDS_IN_STACK - 1]; 
+                    const newCardElement = createFlashcardElement(newCardDataIndex, flashcardStack.children.length); 
+                    flashcardStack.appendChild(newCardElement);
+                }
+
+                applyStackStyles();
+                if (onComplete) onComplete();
+
+            }, { once: true });
+        }
+
+        function applyStackStyles() {
+            const cards = flashcardStack.children;
+            for (let i = 0; i < cards.length; i++) {
+                cards[i].style.transition = 'transform 0.2s ease-out, opacity 0.2s ease-out, box-shadow 0.3s ease'; 
+                cards[i].style.opacity = '1'; 
+
+                cards[i].style.transform = ''; 
+                cards[i].classList.remove('active'); 
+
+                if (i === 0) {
+                    cards[i].style.transform = 'translateY(0) scale(1)'; 
+                    cards[i].classList.add('active');
+                    updateDisplayStage(cards[i], 0); 
+                    addEventListenersToActiveCard(); 
+                } else if (i === 1) {
+                    cards[i].style.transform = 'translateY(calc(10px + 1vw)) scale(0.95)';
+                } else if (i === 2) {
+                    cards[i].style.transform = 'translateY(calc(20px + 2vw)) scale(0.90)';
+                } else {
+                    cards[i].style.transform = 'translateY(calc(30px + 3vw)) scale(0.85)';
+                    cards[i].style.opacity = '0'; 
+                }
+            }
+        }
+
+
+        function updateDisplayStage(cardElement, stage) {
+            const contentElements = Array.from(cardElement.querySelectorAll('.flashcard-content'));
+            contentElements.forEach((el, idx) => {
+                if (idx === stage) {
+                    el.classList.add('active-display');
+                } else {
+                    el.classList.remove('active-display');
+                }
+            });
+            cardElement.dataset.currentDisplayStage = stage;
+        }
+
+        let currentCardListeners = {}; 
+
+        function addEventListenersToActiveCard() {
+            const activeCard = flashcardStack.querySelector('.flashcard.active');
+            if (!activeCard) return;
+
+            const clickHandler = (e) => {
+                const audioZone = activeCard.querySelector('.audio-zone');
+                const rect = audioZone.getBoundingClientRect();
+                if (e.clientX >= rect.left && e.clientX <= rect.right &&
+                    e.clientY >= rect.top && e.clientY <= rect.bottom) {
+                    e.stopPropagation(); 
+                    const currentCardDataIndex = parseInt(activeCard.dataset.cardDataIndex);
+                    if (!isNaN(currentCardDataIndex) && flashcardsData[currentCardDataIndex]) {
+                         audioPlayer.src = `audios/${flashcardsData[currentCardDataIndex].char}.mp3`;
+                         playAudio();
+                    }
+                    return;
+                }
+
+                let currentStage = parseInt(activeCard.dataset.currentDisplayStage || 0);
+                const nextStage = (currentStage + 1) % 3; 
+                updateDisplayStage(activeCard, nextStage);
+            };
+            activeCard.addEventListener('click', clickHandler);
+            currentCardListeners.click = clickHandler;
+
+            let startX = 0;
+            let startY = 0;
+            let isDragging = false;
+            let initialTransform = ''; 
+
+            const mousedownHandler = (e) => {
+                if (e.button === 0) { 
+                    isDragging = true;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    initialTransform = activeCard.style.transform; 
+                    activeCard.style.transition = 'none'; 
+                    activeCard.style.cursor = 'grabbing';
+                    e.preventDefault();
+                }
+            };
+            activeCard.addEventListener('mousedown', mousedownHandler);
+            currentCardListeners.mousedown = mousedownHandler;
+
+            const mousemoveHandler = (e) => {
+                if (!isDragging) return;
+                const deltaX = e.clientX - startX;
+                const deltaY = e.clientY - startY;
+                const rotation = deltaX / (window.innerWidth / 2) * 20; 
+                activeCard.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${rotation}deg)`;
+
+                if (deltaX > 50) {
+                    activeCard.style.boxShadow = '0 10px 30px rgba(76, 175, 80, 0.4)';
+                } else if (deltaX < -50) {
+                    activeCard.style.boxShadow = '0 10px 30px rgba(244, 67, 54, 0.4)';
+                } else {
+                    activeCard.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
+                }
+            };
+            document.addEventListener('mousemove', mousemoveHandler); 
+            currentCardListeners.mousemove = mousemoveHandler;
+
+            const mouseupHandler = (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                document.removeEventListener('mousemove', mousemoveHandler); 
+                
+                activeCard.style.transition = 'transform 0.3s ease-out, box-shadow 0.3s ease'; 
+                activeCard.style.cursor = 'grab';
+                activeCard.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
+
+                const deltaX = e.clientX - startX;
+                const swipeThreshold = 100; 
+
+                if (Math.abs(deltaX) > swipeThreshold) {
+                    const direction = deltaX > 0 ? 'right' : 'left';
+                    swipeCard(direction);
+                } else {
+                    activeCard.style.transform = initialTransform; 
+                }
+            };
+            document.addEventListener('mouseup', mouseupHandler); 
+            currentCardListeners.mouseup = mouseupHandler;
+
+
+            const touchstartHandler = (e) => {
+                isDragging = true;
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                initialTransform = activeCard.style.transform;
+                activeCard.style.transition = 'none';
+                e.preventDefault();
+            };
+            activeCard.addEventListener('touchstart', touchstartHandler);
+            currentCardListeners.touchstart = touchstartHandler;
+
+            const touchmoveHandler = (e) => {
+                if (!isDragging) return;
+                const deltaX = e.touches[0].clientX - startX;
+                const deltaY = e.touches[0].clientY - startY;
+                const rotation = deltaX / (window.innerWidth / 2) * 20;
+                activeCard.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${rotation}deg)`;
+
+                if (deltaX > 50) {
+                    activeCard.style.boxShadow = '0 10px 30px rgba(76, 175, 80, 0.4)';
+                } else if (deltaX < -50) {
+                    activeCard.style.boxShadow = '0 10px 30px rgba(244, 67, 54, 0.4)';
+                } else {
+                    activeCard.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
+                }
+            };
+            document.addEventListener('touchmove', touchmoveHandler);
+            currentCardListeners.touchmove = touchmoveHandler;
+
+            const touchendHandler = (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                document.removeEventListener('touchmove', touchmoveHandler);
+                
+                activeCard.style.transition = 'transform 0.3s ease-out, box-shadow 0.3s ease'; 
+                activeCard.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
+
+                const deltaX = e.changedTouches[0].clientX - startX;
+                const swipeThreshold = 100;
+
+                if (Math.abs(deltaX) > swipeThreshold) {
+                    const direction = deltaX > 0 ? 'right' : 'left';
+                    swipeCard(direction);
+                } else {
+                    activeCard.style.transform = initialTransform;
+                }
+            };
+            document.addEventListener('touchend', touchendHandler);
+            currentCardListeners.touchend = touchendHandler;
+        }
+
+        function removeEventListenersFromActiveCard() {
+            const activeCard = flashcardStack.querySelector('.flashcard.active');
+            if (activeCard) {
+                if (currentCardListeners.click) activeCard.removeEventListener('click', currentCardListeners.click);
+                if (currentCardListeners.mousedown) activeCard.removeEventListener('mousedown', currentCardListeners.mousedown);
+                if (currentCardListeners.mousemove) document.removeEventListener('mousemove', currentCardListeners.mousemove);
+                if (currentCardListeners.mouseup) document.removeEventListener('mouseup', currentCardListeners.mouseup);
+                if (currentCardListeners.touchstart) activeCard.removeEventListener('touchstart', currentCardListeners.touchstart);
+                if (currentCardListeners.touchmove) document.removeEventListener('touchmove', currentCardListeners.touchmove);
+                if (currentCardListeners.touchend) document.removeEventListener('touchend', currentCardListeners.touchend);
+            }
+            currentCardListeners = {}; 
+        }
+        
         function playAudio() {
+            if (!audioPlayer.paused) {
+                audioPlayer.pause();
+                audioPlayer.currentTime = 0;
+            }
             audioPlayer.play().catch(e => console.error("Error playing audio:", e));
         }
 
-        // --- Event Listeners ---
+        // --- Score Overlay Logic ---
+        function updateScoreDisplay() {
+            const notMasteredColumn = document.querySelector('.score-column.not-mastered');
+            const mediumColumn = document.querySelector('.score-column.medium');
+            const masteredColumn = document.querySelector('.score-column.mastered');
 
-        // Click to flip card
-        flashcard.addEventListener('click', (e) => {
-            // Check if click was on audio zone
-            const rect = audioZone.getBoundingClientRect();
-            if (e.clientX >= rect.left && e.clientX <= rect.right &&
-                e.clientY >= rect.top && e.clientY <= rect.bottom) {
-                // If it's on the audio zone, let the audio zone handler manage it
-                return;
-            }
+            notMasteredColumn.innerHTML = '<h4>À Travailler (0-1)</h4>';
+            mediumColumn.innerHTML = '<h4>À Revoir (2-3)</h4>';
+            masteredColumn.innerHTML = '<h4>Maîtrisé (4-5)</h4>';
 
-            // Otherwise, flip the card
-            if (cardSide === 'front') {
-                flashcard.classList.add('flipped');
-                pinyinDisplay.parentNode.style.zIndex = 3;
-                characterDisplay.parentNode.style.zIndex = 2;
-                translationDisplay.parentNode.style.zIndex = 1;
-                cardSide = 'middle';
-            } else if (cardSide === 'middle') {
-                flashcard.classList.add('flipped'); // Keep flipped
-                translationDisplay.parentNode.style.zIndex = 3;
-                pinyinDisplay.parentNode.style.zIndex = 2;
-                characterDisplay.parentNode.style.zIndex = 1;
-                cardSide = 'back';
-            } else { // cardSide === 'back'
-                // This state is managed by swipe, but a click can bring it back to front if needed.
-                // For now, after showing translation, we expect a swipe.
-                // If we want a click to cycle back to front:
-                // flashcard.classList.remove('flipped');
-                // characterDisplay.parentNode.style.zIndex = 3;
-                // pinyinDisplay.parentNode.style.zIndex = 2;
-                // translationDisplay.parentNode.style.zIndex = 1;
-                // cardSide = 'front';
-            }
-        });
+            const sortedCards = flashcardsData
+                .map((data, index) => ({ ...data, score: cardScores[index], originalIndex: index }))
+                .sort((a, b) => a.score - b.score); 
 
-        // Audio playback
-        audioZone.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent card flip when clicking audio zone
-            playAudio();
-        });
+            sortedCards.forEach(card => {
+                const itemDiv = document.createElement('div');
+                itemDiv.classList.add('score-item');
+                itemDiv.innerHTML = `
+                    <span class="score-char">${card.char}</span>
+                    <span class="score-details">${card.pinyin} (${card.score})</span>
+                `;
 
-        // --- Swipe functionality ---
-        flashcard.addEventListener('mousedown', (e) => {
-            if (e.button === 0) { // Left click
-                isDragging = true;
-                startX = e.clientX;
-                startY = e.clientY;
-                flashcard.style.transition = 'none'; // Disable transition during drag
-                flashcard.style.cursor = 'grabbing';
-            }
-        });
-
-        flashcard.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            const deltaX = e.clientX - startX;
-            const deltaY = e.clientY - startY; // Keep for potential vertical swipe in future
-
-            // Apply transform for visual drag
-            flashcard.style.transform = `translate(${deltaX}px, ${deltaY}px) ${cardSide === 'middle' || cardSide === 'back' ? 'rotateY(180deg)' : ''}`;
-
-            // Provide visual feedback for swipe direction
-            if (deltaX > 50) {
-                flashcard.style.boxShadow = '0 10px 30px rgba(76, 175, 80, 0.4)'; // Green for right
-            } else if (deltaX < -50) {
-                flashcard.style.boxShadow = '0 10px 30px rgba(244, 67, 54, 0.4)'; // Red for left
-            } else {
-                flashcard.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)'; // Default
-            }
-        });
-
-        flashcard.addEventListener('mouseup', (e) => {
-            if (!isDragging) return;
-            isDragging = false;
-            flashcard.style.transition = 'transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1), box-shadow 0.3s ease'; // Re-enable transition
-            flashcard.style.cursor = 'grab';
-            flashcard.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)'; // Reset shadow
-
-            const deltaX = e.clientX - startX;
-
-            if (Math.abs(deltaX) > 100) { // Threshold for a valid swipe
-                if (deltaX > 0) {
-                    // Swiped right (correct)
-                    if (cardScores[currentCardIndex] < SCORE_MAX) {
-                        cardScores[currentCardIndex]++;
-                    }
-                    showFeedback("Correct !", "correct");
+                if (card.score <= 1) {
+                    notMasteredColumn.appendChild(itemDiv);
+                } else if (card.score <= 3) {
+                    mediumColumn.appendChild(itemDiv);
                 } else {
-                    // Swiped left (incorrect)
-                    if (cardScores[currentCardIndex] > SCORE_MIN) {
-                        cardScores[currentCardIndex]--;
-                    }
-                    showFeedback("Incorrect !", "incorrect");
+                    masteredColumn.appendChild(itemDiv);
                 }
-                // Load next card after feedback
-                setTimeout(() => {
-                    flashcard.style.transform = ''; // Reset position for next card animation
-                    nextCard();
-                }, 300); // Give a short moment for feedback to show
-            } else {
-                // Not a strong enough swipe, return to original position
-                flashcard.style.transform = `${cardSide === 'middle' || cardSide === 'back' ? 'rotateY(180deg)' : ''}`;
+            });
+        }
+
+        function showScoreOverlay() {
+            updateScoreDisplay();
+            scoreOverlay.classList.add('visible');
+        }
+
+        function hideScoreOverlay() {
+            scoreOverlay.classList.remove('visible');
+        }
+
+        // --- Home Indicator Bar Swipe Logic ---
+        let touchStartY = 0;
+        let isSwipingUp = false;
+        const SWIPE_UP_THRESHOLD = -50; // pixels, negative for upward movement
+
+        homeIndicatorBar.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+            isSwipingUp = true;
+            e.preventDefault(); // Prevent scrolling on touch devices
+        }, { passive: false });
+
+        homeIndicatorBar.addEventListener('touchmove', (e) => {
+            if (!isSwipingUp) return;
+            const currentY = e.touches[0].clientY;
+            const deltaY = currentY - touchStartY;
+
+            // Optional: Provide visual feedback during swipe
+            // You could adjust the position of the modal slightly here, for example
+            // scoreOverlay.style.transform = `translateY(${Math.max(0, 100 + deltaY)}%)`;
+
+            if (deltaY < SWIPE_UP_THRESHOLD) {
+                showScoreOverlay();
+                isSwipingUp = false; // Disable further swipe detection until touch ends
             }
         });
 
-        // Touch events for mobile
-        flashcard.addEventListener('touchstart', (e) => {
-            isDragging = true;
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-            flashcard.style.transition = 'none';
+        homeIndicatorBar.addEventListener('touchend', () => {
+            isSwipingUp = false;
+            // If not swiped enough, potentially reset any visual feedback here
+            // scoreOverlay.style.transform = 'translateY(100%)'; // If you added a dynamic transform in touchmove
         });
 
-        flashcard.addEventListener('touchmove', (e) => {
-            if (!isDragging) return;
-            const deltaX = e.touches[0].clientX - startX;
-            const deltaY = e.touches[0].clientY - startY;
-            flashcard.style.transform = `translate(${deltaX}px, ${deltaY}px) ${cardSide === 'middle' || cardSide === 'back' ? 'rotateY(180deg)' : ''}`;
+        homeIndicatorBar.addEventListener('touchcancel', () => {
+            isSwipingUp = false;
+        });
+        
+        // For mouse users, a simple click on the bar can open it
+        homeIndicatorBar.addEventListener('click', showScoreOverlay);
 
-            if (deltaX > 50) {
-                flashcard.style.boxShadow = '0 10px 30px rgba(76, 175, 80, 0.4)';
-            } else if (deltaX < -50) {
-                flashcard.style.boxShadow = '0 10px 30px rgba(244, 67, 54, 0.4)';
-            } else {
-                flashcard.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
+
+        // Close overlay on click outside modal or Escape key
+        scoreOverlay.addEventListener('click', (e) => {
+            // Only close if clicking the background, not the modal itself
+            if (e.target === scoreOverlay) { 
+                hideScoreOverlay();
             }
         });
 
-        flashcard.addEventListener('touchend', (e) => {
-            if (!isDragging) return;
-            isDragging = false;
-            flashcard.style.transition = 'transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1), box-shadow 0.3s ease';
-            flashcard.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
-
-            const deltaX = e.changedTouches[0].clientX - startX;
-
-            if (Math.abs(deltaX) > 100) {
-                if (deltaX > 0) {
-                    if (cardScores[currentCardIndex] < SCORE_MAX) {
-                        cardScores[currentCardIndex]++;
-                    }
-                    showFeedback("Correct !", "correct");
-                } else {
-                    if (cardScores[currentCardIndex] > SCORE_MIN) {
-                        cardScores[currentCardIndex]--;
-                    }
-                    showFeedback("Incorrect !", "incorrect");
-                }
-                setTimeout(() => {
-                    flashcard.style.transform = '';
-                    nextCard();
-                }, 300);
-            } else {
-                flashcard.style.transform = `${cardSide === 'middle' || cardSide === 'back' ? 'rotateY(180deg)' : ''}`;
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && scoreOverlay.classList.contains('visible')) {
+                hideScoreOverlay();
             }
         });
 
-        // Initial load
-        document.addEventListener('DOMContentLoaded', nextCard);
+
+        // Initial setup
+        document.addEventListener('DOMContentLoaded', initializeCardStack);
     </script>
 </body>
 </html>

@@ -1,190 +1,202 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Cartes Chinoises - Audio Local</title>
-  <style>
-    html, body {
-      margin: 0; padding: 0; height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: white;
-      font-family: Arial, sans-serif;
-      overflow-x: visible;
-    }
-    body {
-      flex-direction: column;
-    }
-    .container {
-      position: relative;
-      width: 400px;
-      height: 400px;
-      user-select: none;
-    }
-    .card {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      background: white;
-      border: 2px solid black;
-      border-radius: 12px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 5rem;
-      z-index: 1;
-    }
-    .card.next {
-      transform: scale(0.95);
-      opacity: 0.3;
-      z-index: 0;
-    }
-    .audio-zone {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      width: 60px;
-      height: 60px;
-      background: lightgray;
-      border-radius: 50%;
-      z-index: 2;
-      cursor: pointer;
-    }
-    .buttons {
-      margin-top: 30px;
-      display: flex;
-      gap: 40px;
-    }
-    button {
-      width: 60px;
-      height: 60px;
-      font-size: 2rem;
-      border-radius: 50%;
-      border: 2px solid black;
-      background: white;
-      cursor: pointer;
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cartes Chinoises - Audio Local</title>
+    <style>
+        html, body {
+            margin: 0; padding: 0; height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: white;
+            font-family: Arial, sans-serif;
+            overflow-x: visible;
+        }
+        body {
+            flex-direction: column;
+        }
+        .container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            user-select: none;
+        }
+        .card {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            border: 2px solid black;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 5rem;
+            z-index: 1;
+        }
+        .card.next {
+            transform: scale(0.95);
+            opacity: 0.3;
+            z-index: 0;
+        }
+        .audio-zone {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 60px;
+            height: 60px;
+            background: lightgray;
+            border-radius: 50%;
+            z-index: 2;
+            cursor: pointer;
+            display: flex; /* Added for centering the icon */
+            justify-content: center; /* Added for centering the icon */
+            align-items: center; /* Added for centering the icon */
+            font-size: 2rem; /* Added for sizing the icon */
+            color: black; /* Added for icon color */
+        }
+        .buttons {
+            margin-top: 30px;
+            display: flex;
+            gap: 40px;
+        }
+        button {
+            width: 60px;
+            height: 60px;
+            font-size: 2rem;
+            border-radius: 50%;
+            border: 2px solid black;
+            background: white;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
 
-  <div class="container" id="container">
-    <div class="card current" id="cardCurrent">...</div>
-    <div class="card next" id="cardNext">...</div>
-    <div class="audio-zone" id="audioZone" title="Jouer l’audio">🔊</div>
-  </div>
+    <div class="container" id="container">
+        <div class="card current" id="cardCurrent">...</div>
+        <div class="card next" id="cardNext">...</div>
+        <div class="audio-zone" id="audioZone" title="Jouer l’audio">🔊</div>
+    </div>
 
-  <div class="buttons">
-    <button id="btnWrong" title="Je ne connais pas">✗</button>
-    <button id="btnRight" title="Je connais">✓</button>
-  </div>
+    <div class="buttons">
+        <button id="btnWrong" title="Je ne connais pas">✗</button>
+        <button id="btnRight" title="Je connais">✓</button>
+    </div>
 
-  <script>
-    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQLhJumynOVacZQyjTJdfb2E03VOHW3FdlwYszFGHJcrOVWaihv-mrXDc3oegjTdFpJTobI1jN1nNpN/pub?gid=0&single=true&output=csv";
+    <script>
+        const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQLhJumynOVacZQyjTJdfb2E03VOHW3FdlwYszFGHJcrOVWaihv-mrXDc3oegjTdFpJTobI1jN1nNpN/pub?gid=0&single=true&output=csv";
 
-    let cards = [];
-    let currentIndex = 0;
-    let displayState = 0;
+        let cards = [];
+        let currentIndex = 0;
+        let displayState = 0;
 
-    const cardCurrent = document.getElementById("cardCurrent");
-    const cardNext = document.getElementById("cardNext");
-    const btnRight = document.getElementById("btnRight");
-    const btnWrong = document.getElementById("btnWrong");
-    const audioZone = document.getElementById("audioZone");
+        const cardCurrent = document.getElementById("cardCurrent");
+        const cardNext = document.getElementById("cardNext");
+        const btnRight = document.getElementById("btnRight");
+        const btnWrong = document.getElementById("btnWrong");
+        const audioZone = document.getElementById("audioZone");
 
-    let audio = new Audio();
+        let audio = new Audio();
 
-    function parseCSV(text) {
-      const lines = text.trim().split("\n");
-      return lines.map(line => {
-        const [character, pinyin, translation] = line.split(",");
-        return {
-          character,
-          pinyin,
-          translation,
-          familiarity: 0
-        };
-      });
-    }
+        function parseCSV(text) {
+            const lines = text.trim().split("\n");
+            return lines.map(line => {
+                const [character, pinyin, translation] = line.split(",");
+                return {
+                    character,
+                    pinyin,
+                    translation,
+                    familiarity: 0
+                };
+            });
+        }
 
-    function displayCard(index, element) {
-      if (cards.length === 0) {
-        element.textContent = "Aucune carte";
-        return;
-      }
-      const card = cards[index];
-      if (displayState === 0) {
-        element.textContent = card.character;
-      } else if (displayState === 1) {
-        element.textContent = card.pinyin;
-      } else {
-        element.textContent = card.translation;
-      }
-    }
+        function displayCard(index, element) {
+            if (cards.length === 0) {
+                element.textContent = "Aucune carte";
+                return;
+            }
+            const card = cards[index];
+            if (displayState === 0) {
+                element.textContent = card.character;
+            } else if (displayState === 1) {
+                element.textContent = card.pinyin;
+            } else {
+                element.textContent = card.translation;
+            }
+        }
 
-    function refreshCards() {
-      displayState = 0;
-      displayCard(currentIndex, cardCurrent);
-      cardNext.textContent = "...";
-    }
+        function refreshCards() {
+            displayState = 0;
+            displayCard(currentIndex, cardCurrent);
+            cardNext.textContent = "...";
+        }
 
-    function weightedRandomIndex(cards) {
-      const weights = cards.map(c => 6 - (c.familiarity || 0));
-      const total = weights.reduce((a, b) => a + b, 0);
-      let r = Math.random() * total;
-      for (let i = 0; i < cards.length; i++) {
-        if (r < weights[i]) return i;
-        r -= weights[i];
-      }
-      return 0;
-    }
+        function weightedRandomIndex(cards) {
+            const weights = cards.map(c => 6 - (c.familiarity || 0));
+            const total = weights.reduce((a, b) => a + b, 0);
+            let r = Math.random() * total;
+            for (let i = 0; i < cards.length; i++) {
+                if (r < weights[i]) return i;
+                r -= weights[i];
+            }
+            return 0;
+        }
 
-    function nextCard(known) {
-      if (known) {
-        cards[currentIndex].familiarity = Math.min(cards[currentIndex].familiarity + 1, 5);
-      } else {
-        cards[currentIndex].familiarity = Math.max(cards[currentIndex].familiarity - 1, 0);
-      }
-      currentIndex = weightedRandomIndex(cards);
-      refreshCards();
-    }
+        function nextCard(known) {
+            if (known) {
+                cards[currentIndex].familiarity = Math.min(cards[currentIndex].familiarity + 1, 5);
+            } else {
+                cards[currentIndex].familiarity = Math.max(cards[currentIndex].familiarity - 1, 0);
+            }
+            currentIndex = weightedRandomIndex(cards);
+            refreshCards();
+        }
 
-    function playAudio() {
-        if (cards.length === 0) return;
-        const character = cards[currentIndex].character;
-        const audioUrl = "audios/" + encodeURIComponent(character) + ".mp3";
+        function playAudio() {
+            console.log("--- playAudio() appelée ---"); // LOG 1: Vérifie si la fonction est appelée
+            if (cards.length === 0) {
+                console.log("Pas de cartes chargées, impossible de jouer l'audio.");
+                return;
+            }
+            const character = cards[currentIndex].character;
+            const audioUrl = "audios/" + encodeURIComponent(character) + ".mp3"; // Génère l'URL
+            console.log("URL audio générée :", audioUrl); // LOG 2: Affiche l'URL générée
 
-        audio.src = audioUrl;
-        audio.play().catch(err => {
-    console.error("Audio non disponible pour : " + character, err);
-    alert("Pas de fichier audio pour : " + character);
-  });
-}
+            audio.src = audioUrl; // Définit la source audio
+            audio.load(); // Ajouté: S'assure que le navigateur charge la nouvelle source
+            audio.play().catch(err => {
+                console.error("Erreur lors de la lecture de l'audio pour : " + character + " (URL: " + audioUrl + ")", err); // LOG 3: Message d'erreur plus détaillé
+                alert("Pas de fichier audio pour : " + character + " (Erreur: " + err.name + ")");
+            });
+        }
 
-    audioZone.addEventListener("click", playAudio);
-    cardCurrent.addEventListener("click", () => {
-      displayState = (displayState + 1) % 3;
-      displayCard(currentIndex, cardCurrent);
-    });
+        audioZone.addEventListener("click", playAudio);
+        cardCurrent.addEventListener("click", () => {
+            displayState = (displayState + 1) % 3;
+            displayCard(currentIndex, cardCurrent);
+        });
 
-    btnRight.addEventListener("click", () => nextCard(true));
-    btnWrong.addEventListener("click", () => nextCard(false));
+        btnRight.addEventListener("click", () => nextCard(true));
+        btnWrong.addEventListener("click", () => nextCard(false));
 
-    fetch(SHEET_CSV_URL)
-      .then(r => r.text())
-      .then(text => {
-        cards = parseCSV(text);
-        currentIndex = weightedRandomIndex(cards);
-        refreshCards();
-      })
-      .catch(err => {
-        cardCurrent.textContent = "Erreur chargement données";
-        console.error(err);
-      });
-  </script>
+        fetch(SHEET_CSV_URL)
+            .then(r => r.text())
+            .then(text => {
+                cards = parseCSV(text);
+                currentIndex = weightedRandomIndex(cards);
+                refreshCards();
+                console.log("Cartes chargées avec succès ! Première carte :", cards[currentIndex]); // LOG 4: Vérifie que les cartes sont chargées
+            })
+            .catch(err => {
+                cardCurrent.textContent = "Erreur chargement données CSV";
+                console.error("Erreur de chargement du CSV :", err);
+            });
+    </script>
 
 </body>
 </html>

@@ -1,221 +1,534 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Cartes Chinoises - Audio Local</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcards Mandarin</title>
     <style>
-        html, body {
-            margin: 0; padding: 0; height: 100%;
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
-            background: white;
-            font-family: Arial, sans-serif;
-            overflow-x: visible;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f2f5;
+            color: #333;
+            overflow: hidden; /* Prevent scroll on swipe */
         }
-        body {
-            flex-direction: column;
+
+        #flashcard-container {
+            width: 90vw;
+            max-width: 500px;
+            height: 60vh;
+            max-height: 400px;
+            perspective: 1000px; /* For 3D flip effect */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none; /* Prevent text selection */
+            -webkit-user-select: none; /* Safari */
+            -moz-user-select: none; /* Firefox */
+            -ms-user-select: none; /* IE10+ */
         }
-        .container {
-            position: relative;
-            width: 400px;
-            height: 400px;
-            user-select: none;
-        }
-        .card {
-            position: absolute;
-            top: 0; left: 0;
+
+        .flashcard {
             width: 100%;
             height: 100%;
-            background: white;
-            border: 2px solid black;
-            border-radius: 12px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            cursor: grab; /* Indicate draggable */
+            background-color: #fff;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            font-size: 5rem;
-            z-index: 1;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+            overflow: hidden; /* For hidden audio zone */
         }
-        .card.next {
-            transform: scale(0.95);
-            opacity: 0.3;
-            z-index: 0;
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
         }
-        .audio-zone {
+
+        .flashcard-content {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .flashcard-front {
+            font-size: 8em; /* Large character */
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .flashcard-middle {
+            transform: rotateY(180deg);
+            font-size: 3em; /* Pinyin */
+            color: #2196F3;
+        }
+
+        .flashcard-back {
+            transform: rotateY(180deg);
+            font-size: 2.5em; /* Translation */
+            color: #FF9800;
+        }
+
+        .flashcard-content h2 {
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        #audio-zone {
             position: absolute;
             bottom: 0;
             right: 0;
-            width: 60px;
-            height: 60px;
-            background: lightgray;
-            border-radius: 50%;
-            z-index: 2;
+            width: 30%; /* Adjust size of clickable zone */
+            height: 30%; /* Adjust size of clickable zone */
             cursor: pointer;
-            /* J'ai gardé les styles que j'avais ajoutés pour l'icône, au cas où tu voudrais la remettre facilement */
-            /* display: flex; */
-            /* justify-content: center; */
-            /* align-items: center; */
-            /* font-size: 2rem; */
-            /* color: black; */
+            z-index: 10; /* Ensure it's above other content */
+            /* background-color: rgba(0, 0, 255, 0.1); /* For debugging, remove in production */
         }
-        .buttons {
-            margin-top: 30px;
-            display: flex;
-            gap: 40px;
+
+        #feedback {
+            position: fixed;
+            top: 20px;
+            font-size: 1.5em;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+            z-index: 100;
         }
-        button {
-            width: 60px;
-            height: 60px;
-            font-size: 2rem;
-            border-radius: 50%;
-            border: 2px solid black;
-            background: white;
-            cursor: pointer;
+
+        #feedback.show {
+            opacity: 1;
+        }
+
+        #feedback.correct {
+            color: #4CAF50;
+            transform: translateY(0);
+        }
+
+        #feedback.incorrect {
+            color: #F44336;
+            transform: translateY(0);
         }
     </style>
 </head>
 <body>
-
-    <div class="container" id="container">
-        <div class="card current" id="cardCurrent">...</div>
-        <div class="card next" id="cardNext">...</div>
-        <div class="audio-zone" id="audioZone" title="Jouer l’audio"></div></div>
-
-    <div class="buttons">
-        <button id="btnWrong" title="Je ne connais pas">✗</button>
-        <button id="btnRight" title="Je connais">✓</button>
+    <div id="feedback"></div>
+    <div id="flashcard-container">
+        <div class="flashcard" id="flashcard">
+            <div class="flashcard-content flashcard-front" data-card-side="front">
+                <h2 id="character"></h2>
+            </div>
+            <div class="flashcard-content flashcard-middle" data-card-side="middle">
+                <h2 id="pinyin"></h2>
+            </div>
+            <div class="flashcard-content flashcard-back" data-card-side="back">
+                <h2 id="translation"></h2>
+            </div>
+            <div id="audio-zone"></div>
+        </div>
     </div>
 
+    <audio id="audio-player"></audio>
+
     <script>
-        const SHEET_CSV_URL = "https://docs.google.com/sheets/d/e/2PACX-1vQLhJumynOVacZQyjTJdfb2E03VOHW3FdlwYszFGHJcrOVWaihv-mrXDc3oegjTdFpJTobI1jN1nNpN/pub?gid=0&single=true&output=csv";
+        // Data for flashcards
+        const flashcardsData = [
+            { char: "我", pinyin: "wǒ", translation: "je / moi" },
+            { char: "你", pinyin: "nǐ", translation: "tu / toi" },
+            { char: "他", pinyin: "tā", translation: "il / lui" },
+            { char: "她", pinyin: "tā", translation: "elle" },
+            { char: "我们", pinyin: "wǒmen", translation: "nous" },
+            { char: "你们", pinyin: "nǐmen", translation: "vous" },
+            { char: "他们", pinyin: "tāmen", translation: "ils / eux" },
+            { char: "她们", pinyin: "tāmen", translation: "elles" },
+            { char: "姓", pinyin: "xìng", translation: "s'appeler (nom de famille)" },
+            { char: "叫", pinyin: "jiào", translation: "s'appeler (prénom)" },
+            { char: "学", pinyin: "xué", translation: "étudier" },
+            { char: "是", pinyin: "shì", translation: "être" },
+            { char: "生", pinyin: "shēng", translation: "naître / élève" },
+            { char: "有", pinyin: "yǒu", translation: "avoir" },
+            { char: "说", pinyin: "shuō", translation: "dire / parler" },
+            { char: "在", pinyin: "zài", translation: "être (quelque part)" },
+            { char: "去", pinyin: "qù", translation: "aller" },
+            { char: "来", pinyin: "lái", translation: "venir" },
+            { char: "回", pinyin: "huí", translation: "revenir" },
+            { char: "住", pinyin: "zhù", translation: "habiter / demeurer" },
+            { char: "工作", pinyin: "gōngzuò", translation: "travailler" },
+            { char: "休息", pinyin: "xiūxi", translation: "se reposer" },
+            { char: "找", pinyin: "zhǎo", translation: "chercher" },
+            { char: "问", pinyin: "wèn", translation: "demander" },
+            { char: "喝", pinyin: "hē", translation: "boire" },
+            { char: "想", pinyin: "xiâng", translation: "vouloir" },
+            { char: "知道", pinyin: "zhīdào", translation: "savoir" },
+            { char: "看", pinyin: "kàn", translation: "voir / observer" },
+            { char: "不", pinyin: "bù", translation: "négation" },
+            { char: "没", pinyin: "méi", translation: "négation (passé)" },
+            { char: "呢", pinyin: "ne", translation: "particule interrogative" },
+            { char: "吗", pinyin: "ma", translation: "particule interrogative" },
+            { char: "吧", pinyin: "ba", translation: "particule de suggestion" },
+            { char: "什么", pinyin: "shénme", translation: "quoi / que" },
+            { char: "哪", pinyin: "nǎ", translation: "quel / lequel" },
+            { char: "几", pinyin: "jǐ", translation: "combien (petit nombre) / quelques" },
+            { char: "谁", pinyin: "shéi", translation: "qui ?" },
+            { char: "也", pinyin: "yě", translation: "aussi" },
+            { char: "这", pinyin: "zhè", translation: "ce / cette" },
+            { char: "的", pinyin: "de", translation: "particule possessive" },
+            { char: "个", pinyin: "gè", translation: "classificateur général" },
+            { char: "两", pinyin: "liǎng", translation: "deux (quantité)" },
+            { char: "本", pinyin: "běn", translation: "classificateur pour les livres / racine / origine / fondamentale" },
+            { char: "口", pinyin: "kǒu", translation: "classificateur membres famille / bouche" },
+            { char: "一", pinyin: "yī", translation: "un" },
+            { char: "二", pinyin: "èr", translation: "deux" },
+            { char: "三", pinyin: "sān", translation: "trois" },
+            { char: "四", pinyin: "sì", translation: "quatre" },
+            { char: "五", pinyin: "wǔ", translation: "cinq" },
+            { char: "六", pinyin: "liù", translation: "six" },
+            { char: "七", pinyin: "qī", translation: "sept" },
+            { char: "八", pinyin: "bā", translation: "huit" },
+            { char: "九", pinyin: "jiǔ", translation: "neuf" },
+            { char: "十", pinyin: "shí", translation: "dix" },
+            { char: "多少", pinyin: "duōshǎo", translation: "combien ?" },
+            { char: "多大", pinyin: "duō dà", translation: "quel âge ?" },
+            { char: "岁", pinyin: "suì", translation: "âge" },
+            { char: "几岁", pinyin: "jǐ suì", translation: "Pour les enfants (moins de 10 ans)" },
+            { char: "您多大年纪", pinyin: "Nín duō dà niánjì ?", translation: "Pour être poli avec des personnes âgées" },
+            { char: "在", pinyin: "zài", translation: "être (quelque part)" },
+            { char: "哪儿", pinyin: "nǎr", translation: "où" },
+            { char: "年", pinyin: "nián", translation: "année" },
+            { char: "星期", pinyin: "xīngqī", translation: "semaine" },
+            { char: "日", pinyin: "rì", translation: "jour" },
+            { char: "号", pinyin: "hào", translation: "jour/date (oral)" },
+            { char: "月", pinyin: "yuè", translation: "mois" },
+            { char: "星期日", pinyin: "xīngqīrì", translation: "dimanche" },
+            { char: "生日", pinyin: "shēngrì", translation: "anniversaire" },
+            { char: "几", pinyin: "jǐ", translation: "combien (petit nombre / heure / âge)" },
+            { char: "今天", pinyin: "jīntiān", translation: "aujourd'hui" },
+            { char: "明天", pinyin: "míngtiān", translation: "demain" },
+            { char: "昨天", pinyin: "zuótiān", translation: "hier" },
+            { char: "上午", pinyin: "shàngwǔ", translation: "matin" },
+            { char: "中午", pinyin: "zhōngwǔ", translation: "midi" },
+            { char: "下午", pinyin: "xiàwǔ", translation: "après-midi" },
+            { char: "早上", pinyin: "zǎoshang", translation: "matin (très tôt)" },
+            { char: "晚上", pinyin: "wǎnshang", translation: "soir" },
+            { char: "今年", pinyin: "jīnnián", translation: "cette année" },
+            { char: "明年", pinyin: "míngnián", translation: "l'année prochaine" },
+            { char: "去年", pinyin: "qùnián", translation: "l'année dernière" },
+            { char: "钟", pinyin: "zhōng", translation: "horloge / utilisé pour l'heure précise" },
+            { char: "点", pinyin: "diǎn", translation: "point / unité de compte pour l'heure" },
+            { char: "分", pinyin: "fēn", translation: "minute" },
+            { char: "刻", pinyin: "kè", translation: "quart d'heure" },
+            { char: "半", pinyin: "bàn", translation: "demi (30 minutes)" },
+            { char: "三点钟", pinyin: "sān diǎn zhōng", translation: "3 heures" },
+            { char: "三点五分", pinyin: "sān diǎn wǔ fēn", translation: "3h05" },
+            { char: "六点一刻", pinyin: "liù diǎn yī kè", translation: "6h15" },
+            { char: "六点半", pinyin: "liù diǎn bàn", translation: "6h30" },
+            { char: "七点差一刻", pinyin: "qī diǎn chà yī kè", translation: "6h45" },
+            { char: "六点三刻", pinyin: "liù diǎn sān kè", translation: "6h45 (alternative)" },
+            { char: "好", pinyin: "hǎo", translation: "bien" },
+            { char: "大", pinyin: "dà", translation: "grand" },
+            { char: "小", pinyin: "xiǎo", translation: "petit" },
+            { char: "老", pinyin: "lǎo", translation: "vieux" },
+            { char: "过", pinyin: "guò", translation: "(passé d'expérience)" },
+            { char: "名字", pinyin: "míngzi", translation: "prénom" },
+            { char: "姓", pinyin: "xìng", translation: "nom de famille" },
+            { char: "人", pinyin: "rén", translation: "personne" },
+            { char: "这个人", pinyin: "zhè ge rén", translation: "cette personne-ci" },
+            { char: "那个人", pinyin: "nà ge rén", translation: "cette personne-là" },
+            { char: "都", pinyin: "dōu", translation: "tous / tout" },
+            { char: "朋友", pinyin: "péngyǒu", translation: "ami" },
+            { char: "男朋友", pinyin: "nán péngyǒu", translation: "petit ami" },
+            { char: "女朋友", pinyin: "nǚ péngyǒu", translation: "petite amie" },
+            { char: "姐姐", pinyin: "jiějie", translation: "grande sœur" },
+            { char: "妹妹", pinyin: "mèimei", translation: "petite sœur" },
+            { char: "哥哥", pinyin: "gēge", translation: "grand frère" },
+            { char: "弟弟", pinyin: "dìdi", translation: "petit frère" },
+            { char: "爸爸", pinyin: "bàba", translation: "papa" },
+            { char: "妈妈", pinyin: "māmā", translation: "maman" },
+            { char: "孩子", pinyin: "háizi", translation: "enfant" },
+            { char: "父母", pinyin: "fùmǔ", translation: "parents" },
+            { char: "学生", pinyin: "xuéshēng", translation: "étudiant" },
+            { char: "大学生", pinyin: "dàxuéshēng", translation: "étudiant (supérieur)" },
+            { char: "中学生", pinyin: "zhōngxuéshēng", translation: "élève du secondaire" },
+            { char: "小学生", pinyin: "xiǎoxuéshēng", translation: "élève du primaire" },
+            { char: "博士", pinyin: "bóshì", translation: "docteur (titre académique)" },
+            { char: "汉语", pinyin: "hànyǔ", translation: "langue chinoise" },
+            { char: "日语", pinyin: "rìyǔ", translation: "langue japonaise" },
+            { char: "法语", pinyin: "fǎyǔ", translation: "langue française" },
+            { char: "英语", pinyin: "yīngyǔ", translation: "langue anglaise" },
+            { char: "德语", pinyin: "déyǔ", translation: "langue allemande" },
+            { char: "文", pinyin: "wén", translation: "écriture / langue" },
+            { char: "历史", pinyin: "lìshǐ", translation: "histoire" },
+            { char: "艺术", pinyin: "yìshù", translation: "art" },
+            { char: "文学", pinyin: "wénxué", translation: "littérature" },
+            { char: "数学", pinyin: "shùxué", translation: "mathématiques" },
+            { char: "中国", pinyin: "zhōngguó", translation: "Chine" },
+            { char: "北京", pinyin: "běijīng", translation: "Pékin" },
+            { char: "法国", pinyin: "fǎguó", translation: "France" },
+            { char: "车", pinyin: "chē", translation: "véhicule" },
+            { char: "汽车", pinyin: "qìchē", translation: "voiture" },
+            { char: "自行车", pinyin: "zìxíngchē", translation: "vélo" },
+            { char: "国", pinyin: "guó", translation: "pays" },
+            { char: "人口", pinyin: "rénkǒu", translation: "population" },
+            { char: "北方人", pinyin: "běifāngrén", translation: "gens du nord" },
+            { char: "南方人", pinyin: "nánfāngrén", translation: "gens du sud" },
+            { char: "中", pinyin: "zhōng", translation: "au centre / milieu" },
+            { char: "北", pinyin: "běi", translation: "nord" },
+            { char: "南", pinyin: "nán", translation: "sud" },
+            { char: "东", pinyin: "dōng", translation: "est" },
+            { char: "西", pinyin: "xī", translation: "ouest" },
+            { char: "茶", pinyin: "chá", translation: "thé" },
+            { char: "是", pinyin: "shì", translation: "Oui" },
+            { char: "不", pinyin: "bù", translation: "non" },
+            { char: "红", pinyin: "hóng", translation: "rouge" },
+            { char: "绿", pinyin: "lü", translation: "Vert" },
+            { char: "奶", pinyin: "nǎi", translation: "lait" }
+        ];
 
-        let cards = [];
-        let currentIndex = 0;
-        let displayState = 0;
+        // Initialize scores for weighted random selection (0 to 5)
+        // 0 = needs more practice, 5 = mastered
+        const cardScores = new Array(flashcardsData.length).fill(2); // Start all at 2 (neutral)
+        const SCORE_MAX = 5;
+        const SCORE_MIN = 0;
 
-        const cardCurrent = document.getElementById("cardCurrent");
-        const cardNext = document.getElementById("cardNext");
-        const btnRight = document.getElementById("btnRight");
-        const btnWrong = document.getElementById("btnWrong");
-        const audioZone = document.getElementById("audioZone");
+        const flashcard = document.getElementById('flashcard');
+        const characterDisplay = document.getElementById('character');
+        const pinyinDisplay = document.getElementById('pinyin');
+        const translationDisplay = document.getElementById('translation');
+        const audioZone = document.getElementById('audio-zone');
+        const audioPlayer = document.getElementById('audio-player');
+        const feedbackDisplay = document.getElementById('feedback');
 
-        let audio = new Audio();
+        let currentCardIndex = -1;
+        let cardSide = 'front'; // 'front', 'middle', 'back'
 
-        function parseCSV(text) {
-            const lines = text.trim().split("\n");
-            // Ajout du filtre pour ignorer l'en-tête et les lignes vides
-            return lines.filter(line => line.trim() !== '' && !line.startsWith('character,pinyin,translation')).map(line => {
-                const [character, pinyin, translation] = line.split(",");
-                return {
-                    character: character ? character.trim() : '',
-                    pinyin: pinyin ? pinyin.trim() : '',
-                    translation: translation ? translation.trim() : '',
-                    familiarity: 0
-                };
-            });
+        // Swipe variables
+        let startX = 0;
+        let startY = 0;
+        let isDragging = false;
+
+        function showFeedback(message, type) {
+            feedbackDisplay.textContent = message;
+            feedbackDisplay.className = 'show ' + type;
+            setTimeout(() => {
+                feedbackDisplay.className = '';
+            }, 1000); // Hide after 1 second
         }
 
-        function displayCard(index, element) {
-            if (cards.length === 0) {
-                element.textContent = "Aucune carte";
-                return;
+        function getWeightedRandomCardIndex() {
+            // Create a temporary array where each card appears (SCORE_MAX - score + 1) times
+            // Cards with lower scores appear more frequently.
+            let weightedIndexes = [];
+            for (let i = 0; i < flashcardsData.length; i++) {
+                const weight = SCORE_MAX - cardScores[i] + 1;
+                for (let j = 0; j < weight; j++) {
+                    weightedIndexes.push(i);
+                }
             }
-            const card = cards[index];
-            if (!card) { // Ajout d'une vérification pour un index invalide
-                element.textContent = "Carte introuvable";
-                return;
-            }
-            if (displayState === 0) {
-                element.textContent = card.character;
-            } else if (displayState === 1) {
-                element.textContent = card.pinyin;
-            } else {
-                element.textContent = card.translation;
-            }
+            const randomIndex = Math.floor(Math.random() * weightedIndexes.length);
+            return weightedIndexes[randomIndex];
         }
 
-        function refreshCards() {
-            displayState = 0;
-            displayCard(currentIndex, cardCurrent);
-            cardNext.textContent = "..."; // La carte suivante reste cachée
+        function loadCard(index) {
+            currentCardIndex = index;
+            const card = flashcardsData[currentCardIndex];
+            characterDisplay.textContent = card.char;
+            pinyinDisplay.textContent = card.pinyin;
+            translationDisplay.textContent = card.translation;
+            audioPlayer.src = `audio/${card.char}.mp3`;
+
+            // Reset card to front view
+            flashcard.classList.remove('flipped');
+            characterDisplay.parentNode.style.zIndex = 3;
+            pinyinDisplay.parentNode.style.zIndex = 2;
+            translationDisplay.parentNode.style.zIndex = 1;
+            cardSide = 'front';
         }
 
-        function weightedRandomIndex(cards) {
-            if (cards.length === 0) return 0; // Gérer le cas où il n'y a pas de cartes
-            const weights = cards.map(c => 6 - (c.familiarity || 0));
-            const total = weights.reduce((a, b) => a + b, 0);
-            let r = Math.random() * total;
-            for (let i = 0; i < cards.length; i++) {
-                if (r < weights[i]) return i;
-                r -= weights[i];
-            }
-            return 0; // Fallback au cas où quelque chose se passerait mal
-        }
-
-        function nextCard(known) {
-            if (cards.length === 0) return; // S'assurer qu'il y a des cartes avant d'avancer
-
-            if (known) {
-                cards[currentIndex].familiarity = Math.min(cards[currentIndex].familiarity + 1, 5);
-            } else {
-                cards[currentIndex].familiarity = Math.max(cards[currentIndex].familiarity - 1, 0);
-            }
-            currentIndex = weightedRandomIndex(cards);
-            refreshCards();
+        function nextCard() {
+            loadCard(getWeightedRandomCardIndex());
         }
 
         function playAudio() {
-            console.log("--- playAudio() appelée ---");
-            if (cards.length === 0 || !cards[currentIndex] || !cards[currentIndex].character) {
-                console.log("Pas de cartes chargées ou caractère non défini, impossible de jouer l'audio.");
-                alert("Pas de carte ou de caractère défini pour l'audio.");
-                return;
-            }
-            const character = cards[currentIndex].character;
-            const audioUrl = "audios/" + encodeURIComponent(character) + ".mp3";
-            console.log("URL audio essayée :", audioUrl);
-
-            audio.src = audioUrl;
-            audio.load(); // Ajouté: S'assure que le navigateur charge la nouvelle source
-            audio.play().catch(err => {
-                console.error("Erreur lors de la lecture de l'audio pour : " + character + " (URL: " + audioUrl + ")", err);
-                alert(`Impossible de jouer l'audio pour "${character}". Vérifiez si le fichier "${character}.mp3" existe dans le dossier 'audios' et si son nom correspond.`);
-            });
+            audioPlayer.play().catch(e => console.error("Error playing audio:", e));
         }
 
-        audioZone.addEventListener("click", playAudio);
-        cardCurrent.addEventListener("click", () => {
-            displayState = (displayState + 1) % 3;
-            displayCard(currentIndex, cardCurrent);
+        // --- Event Listeners ---
+
+        // Click to flip card
+        flashcard.addEventListener('click', (e) => {
+            // Check if click was on audio zone
+            const rect = audioZone.getBoundingClientRect();
+            if (e.clientX >= rect.left && e.clientX <= rect.right &&
+                e.clientY >= rect.top && e.clientY <= rect.bottom) {
+                // If it's on the audio zone, let the audio zone handler manage it
+                return;
+            }
+
+            // Otherwise, flip the card
+            if (cardSide === 'front') {
+                flashcard.classList.add('flipped');
+                pinyinDisplay.parentNode.style.zIndex = 3;
+                characterDisplay.parentNode.style.zIndex = 2;
+                translationDisplay.parentNode.style.zIndex = 1;
+                cardSide = 'middle';
+            } else if (cardSide === 'middle') {
+                flashcard.classList.add('flipped'); // Keep flipped
+                translationDisplay.parentNode.style.zIndex = 3;
+                pinyinDisplay.parentNode.style.zIndex = 2;
+                characterDisplay.parentNode.style.zIndex = 1;
+                cardSide = 'back';
+            } else { // cardSide === 'back'
+                // This state is managed by swipe, but a click can bring it back to front if needed.
+                // For now, after showing translation, we expect a swipe.
+                // If we want a click to cycle back to front:
+                // flashcard.classList.remove('flipped');
+                // characterDisplay.parentNode.style.zIndex = 3;
+                // pinyinDisplay.parentNode.style.zIndex = 2;
+                // translationDisplay.parentNode.style.zIndex = 1;
+                // cardSide = 'front';
+            }
         });
 
-        btnRight.addEventListener("click", () => nextCard(true));
-        btnWrong.addEventListener("click", () => nextCard(false));
+        // Audio playback
+        audioZone.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent card flip when clicking audio zone
+            playAudio();
+        });
 
-        fetch(SHEET_CSV_URL)
-            .then(r => {
-                if (!r.ok) { // Vérifie si la réponse HTTP est OK (statut 200)
-                    throw new Error(`Erreur HTTP: ${r.status} - Impossible de charger le CSV.`);
-                }
-                return r.text();
-            })
-            .then(text => {
-                cards = parseCSV(text);
-                if (cards.length > 0) {
-                    currentIndex = weightedRandomIndex(cards);
-                    refreshCards();
-                    console.log("Cartes chargées avec succès ! Première carte :", cards[currentIndex]);
+        // --- Swipe functionality ---
+        flashcard.addEventListener('mousedown', (e) => {
+            if (e.button === 0) { // Left click
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                flashcard.style.transition = 'none'; // Disable transition during drag
+                flashcard.style.cursor = 'grabbing';
+            }
+        });
+
+        flashcard.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const deltaX = e.clientX - startX;
+            const deltaY = e.clientY - startY; // Keep for potential vertical swipe in future
+
+            // Apply transform for visual drag
+            flashcard.style.transform = `translate(${deltaX}px, ${deltaY}px) ${cardSide === 'middle' || cardSide === 'back' ? 'rotateY(180deg)' : ''}`;
+
+            // Provide visual feedback for swipe direction
+            if (deltaX > 50) {
+                flashcard.style.boxShadow = '0 10px 30px rgba(76, 175, 80, 0.4)'; // Green for right
+            } else if (deltaX < -50) {
+                flashcard.style.boxShadow = '0 10px 30px rgba(244, 67, 54, 0.4)'; // Red for left
+            } else {
+                flashcard.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)'; // Default
+            }
+        });
+
+        flashcard.addEventListener('mouseup', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            flashcard.style.transition = 'transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1), box-shadow 0.3s ease'; // Re-enable transition
+            flashcard.style.cursor = 'grab';
+            flashcard.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)'; // Reset shadow
+
+            const deltaX = e.clientX - startX;
+
+            if (Math.abs(deltaX) > 100) { // Threshold for a valid swipe
+                if (deltaX > 0) {
+                    // Swiped right (correct)
+                    if (cardScores[currentCardIndex] < SCORE_MAX) {
+                        cardScores[currentCardIndex]++;
+                    }
+                    showFeedback("Correct !", "correct");
                 } else {
-                    cardCurrent.textContent = "Aucune carte trouvée dans le CSV ou erreur de parsing.";
-                    console.warn("Le fichier CSV est vide ou n'a pas pu être parsé correctement.");
+                    // Swiped left (incorrect)
+                    if (cardScores[currentCardIndex] > SCORE_MIN) {
+                        cardScores[currentCardIndex]--;
+                    }
+                    showFeedback("Incorrect !", "incorrect");
                 }
-            })
-            .catch(err => {
-                cardCurrent.textContent = "Erreur chargement données CSV";
-                console.error("Erreur de chargement ou de traitement du CSV :", err);
-            });
-    </script>
+                // Load next card after feedback
+                setTimeout(() => {
+                    flashcard.style.transform = ''; // Reset position for next card animation
+                    nextCard();
+                }, 300); // Give a short moment for feedback to show
+            } else {
+                // Not a strong enough swipe, return to original position
+                flashcard.style.transform = `${cardSide === 'middle' || cardSide === 'back' ? 'rotateY(180deg)' : ''}`;
+            }
+        });
 
+        // Touch events for mobile
+        flashcard.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            flashcard.style.transition = 'none';
+        });
+
+        flashcard.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            const deltaX = e.touches[0].clientX - startX;
+            const deltaY = e.touches[0].clientY - startY;
+            flashcard.style.transform = `translate(${deltaX}px, ${deltaY}px) ${cardSide === 'middle' || cardSide === 'back' ? 'rotateY(180deg)' : ''}`;
+
+            if (deltaX > 50) {
+                flashcard.style.boxShadow = '0 10px 30px rgba(76, 175, 80, 0.4)';
+            } else if (deltaX < -50) {
+                flashcard.style.boxShadow = '0 10px 30px rgba(244, 67, 54, 0.4)';
+            } else {
+                flashcard.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
+            }
+        });
+
+        flashcard.addEventListener('touchend', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            flashcard.style.transition = 'transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1), box-shadow 0.3s ease';
+            flashcard.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
+
+            const deltaX = e.changedTouches[0].clientX - startX;
+
+            if (Math.abs(deltaX) > 100) {
+                if (deltaX > 0) {
+                    if (cardScores[currentCardIndex] < SCORE_MAX) {
+                        cardScores[currentCardIndex]++;
+                    }
+                    showFeedback("Correct !", "correct");
+                } else {
+                    if (cardScores[currentCardIndex] > SCORE_MIN) {
+                        cardScores[currentCardIndex]--;
+                    }
+                    showFeedback("Incorrect !", "incorrect");
+                }
+                setTimeout(() => {
+                    flashcard.style.transform = '';
+                    nextCard();
+                }, 300);
+            } else {
+                flashcard.style.transform = `${cardSide === 'middle' || cardSide === 'back' ? 'rotateY(180deg)' : ''}`;
+            }
+        });
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', nextCard);
+    </script>
 </body>
 </html>

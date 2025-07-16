@@ -8,7 +8,6 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
-            flex-direction: column; /* Changed to column to stack elements vertically */
             justify-content: center;
             align-items: center;
             min-height: 100vh;
@@ -31,7 +30,6 @@
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
-            margin-bottom: 20px; /* Space between cards and audio button */
         }
 
         .flashcard {
@@ -88,20 +86,21 @@
         }
 
         .flashcard-front h2 {
-            font-size: clamp(4em, 10vw, 8em); /* Adjusted min size for better mobile visibility */
+            font-size: clamp(4em, 10vw, 8em);
             font-weight: bold;
         }
 
-        .flashcard-middle h2 { /* Pinyin */
-            font-size: clamp(2em, 5vw, 3em); /* Adjusted min size */
+        .flashcard-middle h2 {
+            font-size: clamp(2em, 5vw, 3em);
         }
 
-        .flashcard-back h2 { /* Translation */
-            font-size: clamp(1.8em, 4vw, 2.5em); /* Adjusted min size */
+        .flashcard-back h2 {
+            font-size: clamp(1.8em, 4vw, 2.5em);
         }
         
-        .flashcard-example h2 { /* Example */
-            font-size: clamp(1.2em, 3vw, 1.8em); /* Adjusted min size */
+        /* New style for example sentence */
+        .flashcard-example h2 {
+            font-size: clamp(1.2em, 3vw, 1.8em);
             padding: 10px;
             line-height: 1.5;
         }
@@ -117,32 +116,14 @@
             color: #000; 
         }
 
-        /* Audio icon inside the card */
-        .audio-icon {
+        .audio-zone { 
             position: absolute;
-            bottom: 15px; /* Adjust as needed */
-            right: 15px; /* Adjust as needed */
-            font-size: 2.5em; /* Adjust size of the speaker icon */
+            bottom: 0;
+            right: 0;
+            width: 30%;
+            height: 30%;
             cursor: pointer;
-            color: #007bff; /* Color of the icon */
-            transition: transform 0.1s ease-in-out, color 0.2s ease;
-            z-index: 10; /* Ensure it's above content */
-            background: none;
-            border: none;
-            padding: 0;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .audio-icon:hover {
-            transform: scale(1.1);
-            color: #0056b3;
-        }
-
-        .audio-icon:active {
-            transform: scale(0.95);
+            z-index: 10; 
         }
 
         #feedback {
@@ -295,7 +276,7 @@
             background-color: #000;
             border-radius: 100px; 
             z-index: 150; 
-            cursor: pointer; 
+            cursor: grab;
         }
 
         #reset-button {
@@ -307,7 +288,7 @@
             font-size: 1em;
             cursor: pointer;
             margin-top: 20px;
-            align-self: center; 
+            align-self: center; /* Center the button in the modal */
             box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
             transition: background-color 0.2s ease, transform 0.1s ease;
         }
@@ -364,7 +345,7 @@
             { char: "叫", pinyin: "jiào", translation: "s'appeler (prénom)", example: "我叫王明 (Wǒ jiào Wáng Míng) - Je m'appelle Wang Ming." },
             { char: "学", pinyin: "xué", translation: "étudier", example: "我学汉语 (Wǒ xué hànyǔ) - J'étudie le chinois." },
             { char: "是", pinyin: "shì", translation: "être", example: "我是法国人 (Wǒ shì Fàguó rén) - Je suis français." },
-            { char: "生", pinyin: "shēng", translation: "naître / élève", example: "我的生日是今天 (Wǒ de shēngrì shì jīn tiān) - Mon anniversaire est aujourd'hui." },
+            { char: "生", pinyin: "shēng", translation: "naître / élève", example: "我的生日是今天 (Wǒ de shēngrì shì jīntiān) - Mon anniversaire est aujourd'hui." },
             { char: "有", pinyin: "yǒu", translation: "avoir", example: "我有一个苹果 (Wǒ yǒu yīgè píngguǒ) - J'ai une pomme." },
             { char: "说", pinyin: "shuō", translation: "dire / parler", example: "你会说汉语吗？ (Nǐ huì shuō hànyǔ ma?) - Sais-tu parler chinois ?" },
             { char: "在", pinyin: "zài", translation: "être (quelque part)", example: "我在家 (Wǒ zài jiā) - Je suis à la maison." },
@@ -387,7 +368,7 @@
             { char: "吧", pinyin: "ba", translation: "particule de suggestion", example: "我们走吧 (Wǒmen zǒu ba) - Allons-y." },
             { char: "什么", pinyin: "shénme", translation: "quoi / que", example: "这是什么？ (Zhè shì shénme?) - Qu'est-ce que c'est ?" },
             { char: "哪", pinyin: "nǎ", translation: "quel / lequel", example: "你是哪国人？ (Nǐ shì nǎ guó rén?) - De quel pays es-tu ?" },
-            { char: "几", pinyin: "jǐ", translation: "combien (petit nombre) / quelques", example: "你有几本书？ (Nǐ yǒu jǐ ben shū?) - Tu as combien de livres ?" },
+            { char: "几", pinyin: "jǐ", translation: "combien (petit nombre) / quelques", example: "你有几本书？ (Nǐ yǒu jǐ běn shū?) - Tu as combien de livres ?" },
             { char: "谁", pinyin: "shéi", translation: "qui ?", example: "他是谁？ (Tā shì shéi?) - Qui est-il ?" },
             { char: "也", pinyin: "yě", translation: "aussi", example: "我也去 (Wǒ yě qù) - J'y vais aussi." },
             { char: "这", pinyin: "zhè", translation: "ce / cette", example: "这是我的书 (Zhè shì wǒ de shū) - C'est mon livre." },
@@ -410,7 +391,7 @@
             { char: "多大", pinyin: "duō dà", translation: "quel âge ?", example: "你多大了？ (Nǐ duō dà le?) - Quel âge as-tu ?" },
             { char: "岁", pinyin: "suì", translation: "âge", example: "我十八岁 (Wǒ shíbā suì) - J'ai dix-huit ans." },
             { char: "几岁", pinyin: "jǐ suì", translation: "Pour les enfants (moins de 10 ans)", example: "你几岁了？ (Nǐ jǐ suì le?) - Quel âge as-tu (enfant) ?" },
-            { char: "您多大年纪", pinyin: "Nín duō dà niánjì ?", translation: "Pour être poli avec des personnes âgées", example: "Vous avez quel âge (poli) ?" },
+            { char: "您多大年纪", pinyin: "Nín duō dà niánjì ?", translation: "Pour être poli avec des personnes âgées", example: "您多大年纪了？ (Nín duō dà niánjì le?) - Quel âge avez-vous (poli) ?" },
             { char: "在", pinyin: "zài", translation: "être (quelque part)", example: "我在家 (Wǒ zài jiā) - Je suis à la maison." },
             { char: "哪儿", pinyin: "nǎr", translation: "où", example: "你去哪儿？ (Nǐ qù nǎr?) - Où vas-tu ?" },
             { char: "年", pinyin: "nián", translation: "année", example: "今年是二零二五年 (Jīnnián shì èr líng èr wǔ nián) - Cette année est 2025." },
@@ -423,7 +404,7 @@
             { char: "几", pinyin: "jǐ", translation: "combien (petit nombre / heure / âge)", example: "现在几点了？ (Xiànzài jǐ diǎn le?) - Quelle heure est-il maintenant ?" },
             { char: "今天", pinyin: "jīntiān", translation: "aujourd'hui", example: "今天天气很好 (Jīntiān tiānqì hěn hǎo) - Il fait beau aujourd'hui." },
             { char: "明天", pinyin: "míngtiān", translation: "demain", example: "明天见 (Míngtiān jiàn) - À demain." },
-            { char: "昨天", pinyin: "zuótiānhier", translation: "hier", example: "昨天我没去 (Zuótiān wǒ méi qù) - Je n'y suis jamais allé hier." },
+            { char: "昨天", pinyin: "zuótiānhier", translation: "hier", example: "昨天我没去 (Zuótiān wǒ méi qù) - Je n'y suis pas allé hier." },
             { char: "上午", pinyin: "shàngwǔ", translation: "matin", example: "上午好 (Shàngwǔ hǎo) - Bonjour (matin)." },
             { char: "中午", pinyin: "zhōngwǔ", translation: "midi", example: "中午吃饭 (Zhōngwǔ chīfàn) - Manger à midi." },
             { char: "下午", pinyin: "xiàwǔ", translation: "après-midi", example: "下午去公园 (Xiàwǔ qù gōngyuán) - Aller au parc l'après-midi." },
@@ -439,79 +420,79 @@
             { char: "半", pinyin: "bàn", translation: "demi (30 minutes)", example: "三点半 (Sān diǎn bàn) - Trois heures et demie." },
             { char: "三点钟", pinyin: "sān diǎn zhōng", translation: "3 heures", example: "火车三点钟开 (Huǒchē sān diǎn zhōng kāi) - Le train part à trois heures." },
             { char: "三点五分", pinyin: "sān diǎn wǔ fēn", translation: "3h05", example: "会议三点五分开始 (Huìyì sān diǎn wǔ fēn kāishǐ) - La réunion commence à 3h05." },
-            { char: "六点一刻", pinyin: "liù diǎn yī kè", translation: "6h15", example: "Nous six heures et un quart se rencontrent." },
-            { char: "六点半", pinyin: "liù diǎn bàn", translation: "6h30", example: "Elle six heures et demie rentre à la maison." },
-            { char: "七点差一刻", pinyin: "qī diǎn chà yī kè", translation: "6h45", example: "Maintenant, il est sept heures moins le quart." },
-            { char: "六点三刻", pinyin: "liù diǎn sān kè", translation: "6h45 (alternative)", example: "Il arrive à six heures trois quarts." },
-            { char: "好", pinyin: "hǎo", translation: "bien", example: "Je vais très bien." },
-            { char: "大", pinyin: "dà", translation: "grand", example: "Cette maison est très grande." },
-            { char: "小", pinyin: "xiǎo", translation: "petit", example: "Mon chien est petit." },
-            { char: "老", pinyin: "lǎo", translation: "vieux", example: "Il est un vieil ami." },
-            { char: "过", pinyin: "guò", translation: "(passé d'expérience)", example: "Je suis allé en Chine (expérience)." },
-            { char: "名字", pinyin: "míngzi", translation: "prénom", example: "Quel est ton prénom ?" },
-            { char: "姓", pinyin: "xìng", translation: "nom de famille", example: "Son nom de famille est Li." },
-            { char: "人", pinyin: "rén", translation: "personne", example: "Personne chinoise / Chinois." },
-            { char: "这个人", pinyin: "zhè ge rén", translation: "cette personne-ci", example: "Qui est cette personne ?" },
-            { char: "那个人", pinyin: "nà ge rén", translation: "cette personne-là", example: "Cette personne-là est mon professeur." },
-            { char: "都", pinyin: "dōu", translation: "tous / tout", example: "Nous sommes tous étudiants." },
-            { char: "朋友", pinyin: "péngyǒu", translation: "ami", example: "C'est mon bon ami." },
-            { char: "男朋友", pinyin: "nán péngyǒu", translation: "petit ami", example: "Elle a un petit ami." },
-            { char: "女朋友", pinyin: "nǚ péngyǒu", translation: "petite amie", example: "Il a une petite amie." },
-            { char: "姐姐", pinyin: "jiějie", translation: "grande sœur", example: "J'ai une grande sœur." },
-            { char: "妹妹", pinyin: "mèimei", translation: "petite sœur", example: "Ma petite sœur est très mignonne." },
-            { char: "哥哥", pinyin: "gēge", translation: "grand frère", example: "Je n'ai pas de grand frère." },
-            { char: "弟弟", pinyin: "dìdi", translation: "petit frère", example: "C'est mon petit frère." },
-            { char: "爸爸", pinyin: "bàba", translation: "papa", example: "J'aime papa et maman." },
-            { char: "妈妈", pinyin: "māmā", translation: "maman", example: "Ma maman est à la maison." },
-            { char: "孩子", pinyin: "háizi", translation: "enfant", example: "Elle a deux enfants." },
-            { char: "父母", pinyin: "fùmǔ", translation: "parents", example: "Mes parents sont chinois." },
-            { char: "学生", pinyin: "xuéshēng", translation: "étudiant", example: "Il est un étudiant." },
-            { char: "大学生", pinyin: "dàxuéshēng", translation: "étudiant (supérieur)", example: "Il est un étudiant universitaire." },
-            { char: "中学生", pinyin: "zhōngxuéshēng", translation: "élève du secondaire", example: "Mon cousin est élève au collège/lycée." },
-            { char: "小学生", pinyin: "xiǎoxuéshēng", translation: "élève du primaire", example: "Elle est une élève de primaire." },
-            { char: "博士", pinyin: "bóshì", translation: "docteur (titre académique)", example: "Il est docteur (PhD)." },
-            { char: "汉语", pinyin: "hànyǔ", translation: "langue chinoise", example: "J'apprends le chinois." },
-            { char: "日语", pinyin: "rìyǔ", translation: "langue japonaise", example: "Parles-tu japonais ?" },
-            { char: "法语", pinyin: "fǎyǔ", translation: "langue française", example: "Je viens de France, donc je parle français." },
-            { char: "英语", pinyin: "yīngyǔ", translation: "langue anglaise", example: "Son anglais est très bon." },
-            { char: "德语", pinyin: "déyǔ", translation: "langue allemande", example: "Je ne parle pas allemand." },
-            { char: "文", pinyin: "wén", translation: "écriture / langue", example: "Langue chinoise (écrite)." },
-            { char: "历史", pinyin: "lìshǐ", translation: "histoire", example: "J'aime l'histoire." },
-            { char: "艺术", pinyin: "yìshù", translation: "art", example: "Elle étudie l'art." },
-            { char: "文学", pinyin: "wénxué", translation: "littérature", example: "Il est très intéressé par la littérature." },
-            { char: "数学", pinyin: "shùxué", translation: "mathématiques", example: "Les mathématiques sont difficiles." },
-            { char: "中国", pinyin: "zhōngguó", translation: "Chine", example: "J'aime la Chine." },
-            { char: "北京", pinyin: "běijīng", translation: "Pékin", example: "Je suis allé à Pékin." },
-            { char: "法国", pinyin: "fǎguó", translation: "France", example: "Je suis français." },
-            { char: "车", pinyin: "chē", translation: "véhicule", example: "Cette voiture est très belle." },
-            { char: "汽车", pinyin: "qìchē", translation: "voiture", example: "Il a une voiture." },
-            { char: "自行车", pinyin: "zìxíngchē", translation: "vélo", example: "Je vais au travail à vélo." },
-            { char: "国", pinyin: "guó", translation: "pays", example: "Quel est ton pays ?" },
-            { char: "人口", pinyin: "rénkǒu", translation: "population", example: "La population chinoise est très nombreuse." },
-            { char: "北方人", pinyin: "běifāngrén", translation: "gens du nord", example: "Je suis du nord (de la Chine)." },
-            { char: "南方人", pinyin: "nánfāngrén", translation: "gens du sud", example: "Il est du sud (de la Chine)." },
-            { char: "中", pinyin: "zhōng", translation: "au centre / milieu", example: "Au milieu." },
-            { char: "北", pinyin: "běi", translation: "nord", example: "Pékin est au nord." },
-            { char: "南", pinyin: "nán", translation: "sud", example: "Le sud est très chaud." },
-            { char: "东", pinyin: "dōng", translation: "est", example: "L'Est." },
-            { char: "西", pinyin: "xī", translation: "ouest", example: "Culture occidentale." },
-            { char: "茶", pinyin: "chá", translation: "thé", example: "S'il vous plaît, buvez du thé." },
-            { char: "是", pinyin: "shì", translation: "Oui", example: "Oui, c'est ça." },
-            { char: "不", pinyin: "bù", translation: "non", example: "Non, ce n'est pas juste." },
-            { char: "红", pinyin: "hóng", translation: "rouge", example: "Couleur rouge." },
-            { char: "绿", pinyin: "lü", translation: "Vert", example: "Couleur verte." },
-            { char: "奶", pinyin: "nǎi", translation: "lait", example: "Lait de vache." }
+            { char: "六点一刻", pinyin: "liù diǎn yī kè", translation: "6h15", example: "我们六点一刻见面 (Wǒmen liù diǎn yī kè jiànmiàn) - On se voit à 6h15." },
+            { char: "六点半", pinyin: "liù diǎn bàn", translation: "6h30", example: "她六点半回家 (Tā liù diǎn bàn huí jiā) - Elle rentre à 6h30." },
+            { char: "七点差一刻", pinyin: "qī diǎn chà yī kè", translation: "6h45", example: "现在七点差一刻 (Xiànzài qī diǎn chà yī kè) - Il est 6h45 maintenant." },
+            { char: "六点三刻", pinyin: "liù diǎn sān kè", translation: "6h45 (alternative)", example: "他六点三刻到 (Tā liù diǎn sān kè dào) - Il arrive à 6h45." },
+            { char: "好", pinyin: "hǎo", translation: "bien", example: "我很好 (Wǒ hěn hǎo) - Je vais très bien." },
+            { char: "大", pinyin: "dà", translation: "grand", example: "这个房子很大 (Zhège fángzi hěn dà) - Cette maison est très grande." },
+            { char: "小", pinyin: "xiǎo", translation: "petit", example: "我的狗很小 (Wǒ de gǒu hěn xiǎo) - Mon chien est petit." },
+            { char: "老", pinyin: "lǎo", translation: "vieux", example: "他是一个老朋友 (Tā shì yīgè lǎo péngyǒu) - C'est un vieil ami." },
+            { char: "过", pinyin: "guò", translation: "(passé d'expérience)", example: "我去过中国 (Wǒ qùguò Zhōngguó) - Je suis allé en Chine (expérience)." },
+            { char: "名字", pinyin: "míngzi", translation: "prénom", example: "你的名字是什么？ (Nǐ de míngzi shì shénme?) - Quel est ton prénom ?" },
+            { char: "姓", pinyin: "xìng", translation: "nom de famille", example: "他姓李 (Tā xìng Lǐ) - Son nom de famille est Li." },
+            { char: "人", pinyin: "rén", translation: "personne", example: "中国人 (Zhōngguó rén) - Personne chinoise / Chinois." },
+            { char: "这个人", pinyin: "zhè ge rén", translation: "cette personne-ci", example: "这个人是谁？ (Zhège rén shì shéi?) - Qui est cette personne ?" },
+            { char: "那个人", pinyin: "nà ge rén", translation: "cette personne-là", example: "那个人是我的老师 (Nàgè rén shì wǒ de lǎoshī) - Cette personne-là est mon professeur." },
+            { char: "都", pinyin: "dōu", translation: "tous / tout", example: "我们都是学生 (Wǒmen dōu shì xuéshēng) - Nous sommes tous étudiants." },
+            { char: "朋友", pinyin: "péngyǒu", translation: "ami", example: "他是我的好朋友 (Tā shì wǒ de hǎo péngyǒu) - C'est mon bon ami." },
+            { char: "男朋友", pinyin: "nán péngyǒu", translation: "petit ami", example: "她有男朋友 (Tā yǒu nán péngyǒu) - Elle a un petit ami." },
+            { char: "女朋友", pinyin: "nǚ péngyǒu", translation: "petite amie", example: "他有女朋友 (Tā yǒu nǚ péngyǒu) - Il a une petite amie." },
+            { char: "姐姐", pinyin: "jiějie", translation: "grande sœur", example: "我有一个姐姐 (Wǒ yǒu yīgè jiějie) - J'ai une grande sœur." },
+            { char: "妹妹", pinyin: "mèimei", translation: "petite sœur", example: "我的妹妹很可爱 (Wǒ de mèimei hěn kě'ài) - Ma petite sœur est très mignonne." },
+            { char: "哥哥", pinyin: "gēge", translation: "grand frère", example: "我没有哥哥 (Wǒ méiyǒu gēge) - Je n'ai pas de grand frère." },
+            { char: "弟弟", pinyin: "dìdi", translation: "petit frère", example: "他是我弟弟 (Tā shì wǒ dìdi) - C'est mon petit frère." },
+            { char: "爸爸", pinyin: "bàba", translation: "papa", example: "我爱爸爸妈妈 (Wǒ ài bàba māmā) - J'aime papa et maman." },
+            { char: "妈妈", pinyin: "māmā", translation: "maman", example: "我妈妈在家 (Wǒ māma zài jiā) - Ma maman est à la maison." },
+            { char: "孩子", pinyin: "háizi", translation: "enfant", example: "她有两个孩子 (Tā yǒu liǎng gè háizi) - Elle a deux enfants." },
+            { char: "父母", pinyin: "fùmǔ", translation: "parents", example: "我的父母是中国人 (Wǒ de fùmǔ shì zhōngguó rén) - Mes parents sont chinois." },
+            { char: "学生", pinyin: "xuéshēng", translation: "étudiant", example: "他是一名学生 (Tā shì yī míng xuéshēng) - C'est un étudiant." },
+            { char: "大学生", pinyin: "dàxuéshēng", translation: "étudiant (supérieur)", example: "他是一个大学生 (Tā shì yīgè dàxuéshēng) - C'est un étudiant universitaire." },
+            { char: "中学生", pinyin: "zhōngxuéshēng", translation: "élève du secondaire", example: "我的表弟是中学生 (Wǒ de biǎodì shì zhōngxuéshēng) - Mon cousin est élève au collège/lycée." },
+            { char: "小学生", pinyin: "xiǎoxuéshēng", translation: "élève du primaire", example: "她是一个小学生 (Tā shì yīgè xiǎoxuéshēng) - C'est une élève de primaire." },
+            { char: "博士", pinyin: "bóshì", translation: "docteur (titre académique)", example: "他是博士 (Tā shì bóshì) - Il est docteur (PhD)." },
+            { char: "汉语", pinyin: "hànyǔ", translation: "langue chinoise", example: "我学汉语 (Wǒ xué hànyǔ) - J'apprends le chinois." },
+            { char: "日语", pinyin: "rìyǔ", translation: "langue japonaise", example: "你会说日语吗？ (Nǐ huì shuō rìyǔ ma?) - Parles-tu japonais ?" },
+            { char: "法语", pinyin: "fǎyǔ", translation: "langue française", example: "我来自法国，所以我说法语 (Wǒ láizì Fàguó, suǒyǐ wǒ shuō fǎyǔ) - Je viens de France, donc je parle français." },
+            { char: "英语", pinyin: "yīngyǔ", translation: "langue anglaise", example: "他英语很好 (Tā yīngyǔ hěn hǎo) - Son anglais est très bon." },
+            { char: "德语", pinyin: "déyǔ", translation: "langue allemande", example: "我不会说德语 (Wǒ bù huì shuō déyǔ) - Je ne parle pas allemand." },
+            { char: "文", pinyin: "wén", translation: "écriture / langue", example: "中文 (Zhōngwén) - Langue chinoise (écrite)." },
+            { char: "历史", pinyin: "lìshǐ", translation: "histoire", example: "我喜欢历史 (Wǒ xǐhuān lìshǐ) - J'aime l'histoire." },
+            { char: "艺术", pinyin: "yìshù", translation: "art", example: "她学习艺术 (Tā xuéxí yìshù) - Elle étudie l'art." },
+            { char: "文学", pinyin: "wénxué", translation: "littérature", example: "他对文学很感兴趣 (Tā duì wénxué hěn gǎn xìngqù) - Il est très intéressé par la littérature." },
+            { char: "数学", pinyin: "shùxué", translation: "mathématiques", example: "数学很难 (Shùxué hěn nán) - Les mathématiques sont difficiles." },
+            { char: "中国", pinyin: "zhōngguó", translation: "Chine", example: "我爱中国 (Wǒ ài Zhōngguó) - J'aime la Chine." },
+            { char: "北京", pinyin: "běijīng", translation: "Pékin", example: "我去过北京 (Wǒ qùguò Běijīng) - Je suis allé à Pékin." },
+            { char: "法国", pinyin: "fǎguó", translation: "France", example: "我是法国人 (Wǒ shì Fàguó rén) - Je suis français." },
+            { char: "车", pinyin: "chē", translation: "véhicule", example: "这辆车很漂亮 (Zhè liàng chē hěn piàoliang) - Cette voiture est très belle." },
+            { char: "汽车", pinyin: "qìchē", translation: "voiture", example: "他有一辆汽车 (Tā yǒu yī liàng qìchē) - Il a une voiture." },
+            { char: "自行车", pinyin: "zìxíngchē", translation: "vélo", example: "我骑自行车去上班 (Wǒ qí zìxíngchē qù shàngbān) - Je vais au travail à vélo." },
+            { char: "国", pinyin: "guó", translation: "pays", example: "你的国家是哪里？ (Nǐ de guójiā shì nǎlǐ?) - Quel est ton pays ?" },
+            { char: "人口", pinyin: "rénkǒupopulation", translation: "population", example: "中国人口很多 (Zhōngguó rénkǒu hěn duō) - La population chinoise est très nombreuse." },
+            { char: "北方人", pinyin: "běifāngréngens", translation: "gens du nord", example: "我是北方人 (Wǒ shì běifāng rén) - Je suis du nord (de la Chine)." },
+            { char: "南方人", pinyin: "nánfāngréngens", translation: "gens du sud", example: "他是南方人 (Tā shì nánfāng rén) - Il est du sud (de la Chine)." },
+            { char: "中", pinyin: "zhōng", translation: "au centre / milieu", example: "中间 (Zhōngjiān) - Au milieu." },
+            { char: "北", pinyin: "běi", translation: "nord", example: "北京在北方 (Běijīng zài běifāng) - Pékin est au nord." },
+            { char: "南", pinyin: "nán", translation: "sud", example: "南方很热 (Nánfāng hěn rè) - Le sud est très chaud." },
+            { char: "东", pinyin: "dōng", translation: "est", example: "东方 (Dōngfāng) - L'Est." },
+            { char: "西", pinyin: "xī", translation: "ouest", example: "西方文化 (Xīfāng wénhuà) - Culture occidentale." },
+            { char: "茶", pinyin: "chá", translation: "thé", example: "请喝茶 (Qǐng hē chá) - S'il vous plaît, buvez du thé." },
+            { char: "是", pinyin: "shì", translation: "Oui", example: "是的 (Shì de) - Oui, c'est ça." },
+            { char: "不", pinyin: "bù", translation: "non", example: "不对 (Bù duì) - Non, ce n'est pas juste." },
+            { char: "红", pinyin: "hóng", translation: "rouge", example: "红色 (Hóngsè) - Couleur rouge." },
+            { char: "绿", pinyin: "lü", translation: "Vert", example: "绿色 (Lǜsè) - Couleur verte." },
+            { char: "奶", pinyin: "nǎi", translation: "lait", example: "牛奶 (Niúnǎi) - Lait de vache." }
         ];
 
         let cardScores = new Array(flashcardsData.length).fill(2); 
-        const INITIAL_SCORE = 2; 
+        const INITIAL_SCORE = 2; // Keep track of the initial score for reset
         const SCORE_MAX = 5;
         const SCORE_MIN = 0;
         const NUM_CARDS_IN_STACK = 3; 
         const NUM_DISPLAY_STAGES = 4; // Char, Pinyin, Translation, Example
 
         const flashcardStack = document.getElementById('flashcard-stack');
-        const audioPlayer = document.getElementById('audio-player'); 
+        const audioPlayer = document.getElementById('audio-player');
         const feedbackDisplay = document.getElementById('feedback');
         const scoreOverlay = document.getElementById('score-overlay');
         const homeIndicatorBar = document.getElementById('home-indicator-bar');
@@ -549,25 +530,21 @@
                 let newIndex = getWeightedRandomCardIndex();
                 if (newIndex !== -1) {
                     const displayedCardDataIndices = Array.from(flashcardStack.children).map(cardEl => parseInt(cardEl.dataset.cardDataIndex));
-                    // Check if the new index is already in the current stack or in the queue to avoid duplicates right away
-                    if (!displayedCardDataIndices.includes(newIndex) && !cardDataQueue.includes(newIndex)) {
+                    if (!displayedCardDataIndices.includes(newIndex)) {
                         cardDataQueue.push(newIndex);
                     } else {
-                        // If it's a duplicate, try to find another unique card
                         let foundUnique = false;
                         for(let i = 0; i < flashcardsData.length; i++) {
                             if (!displayedCardDataIndices.includes(i) && !cardDataQueue.includes(i)) {
-                                newIndex = i; // Found a unique index
+                                newIndex = i;
                                 cardDataQueue.push(newIndex);
                                 foundUnique = true;
                                 break;
                             }
                         }
-                        if (!foundUnique && flashcardsData.length > 0) { // If no unique card left, allow duplicates if needed to fill stack
-                            cardDataQueue.push(newIndex); 
-                        } else if (flashcardsData.length === 0) {
-                             console.warn("No cards available in flashcardsData.");
-                             break;
+                        if (!foundUnique) {
+                            console.warn("Could not find a unique card to add to queue.");
+                            break;
                         }
                     }
                 } else {
@@ -588,7 +565,7 @@
             const cardValues = [
                 flashcardsData[cardDataIndex].char,
                 flashcardsData[cardDataIndex].pinyin,
-                flashcardsData[cardDataIndex].actualTranslation || flashcardsData[cardDataIndex].translation, 
+                flashcardsData[cardDataIndex].translation,
                 flashcardsData[cardDataIndex].example 
             ];
 
@@ -602,21 +579,9 @@
                 flashcardDiv.appendChild(contentDiv);
             });
 
-            // Add audio icon directly to the card
-            const audioIcon = document.createElement('button');
-            audioIcon.classList.add('audio-icon');
-            audioIcon.innerHTML = '🔊'; 
-            audioIcon.title = 'Écouter la prononciation';
-            audioIcon.addEventListener('click', (e) => {
-                e.stopPropagation(); // Prevent card tap/swipe when clicking the icon
-                playAudioForCard(cardDataIndex);
-            });
-            audioIcon.addEventListener('touchend', (e) => {
-                e.stopPropagation(); // Prevent card tap/swipe when touching the icon
-                e.preventDefault(); // Prevent default touch behavior
-                playAudioForCard(cardDataIndex);
-            });
-            flashcardDiv.appendChild(audioIcon);
+            const audioZoneDiv = document.createElement('div');
+            audioZoneDiv.classList.add('audio-zone'); 
+            flashcardDiv.appendChild(audioZoneDiv);
 
             return flashcardDiv;
         }
@@ -634,16 +599,12 @@
                 flashcardStack.children[0].classList.add('active');
                 updateDisplayStage(flashcardStack.children[0], 0); 
             }
-            applyStackStyles(); 
             addEventListenersToActiveCard();
         }
 
         function swipeCard(direction, onComplete) {
             const activeCard = flashcardStack.querySelector('.flashcard.active');
-            if (!activeCard) {
-                if (onComplete) onComplete(); 
-                return;
-            }
+            if (!activeCard) return;
 
             removeEventListenersFromActiveCard(); 
 
@@ -676,17 +637,9 @@
                     const newCardDataIndex = cardDataQueue[NUM_CARDS_IN_STACK - 1]; 
                     const newCardElement = createFlashcardElement(newCardDataIndex, flashcardStack.children.length); 
                     flashcardStack.appendChild(newCardElement);
-                } else if (flashcardsData.length > 0 && cardDataQueue.length === 0) {
-                     fillCardQueue(); 
-                     if (cardDataQueue.length > 0) {
-                        const newCardDataIndex = cardDataQueue[0]; 
-                        const newCardElement = createFlashcardElement(newCardDataIndex, flashcardStack.children.length);
-                        flashcardStack.appendChild(newCardElement);
-                     }
                 }
 
-
-                applyStackStyles(); 
+                applyStackStyles();
                 if (onComplete) onComplete();
 
             }, { once: true });
@@ -705,6 +658,7 @@
                     cards[i].style.transform = 'translateY(0) scale(1)'; 
                     cards[i].classList.add('active');
                     updateDisplayStage(cards[i], 0); 
+                    addEventListenersToActiveCard(); 
                 } else if (i === 1) {
                     cards[i].style.transform = 'translateY(calc(10px + 1vw)) scale(0.95)';
                 } else if (i === 2) {
@@ -714,7 +668,6 @@
                     cards[i].style.opacity = '0'; 
                 }
             }
-            addEventListenersToActiveCard(); 
         }
 
 
@@ -731,45 +684,46 @@
         }
 
         let currentCardListeners = {}; 
-        let isDragging = false; 
-        let startX = 0;
-        let startY = 0;
-        let initialTransform = '';
-        let isTap = true; 
-        const tapThreshold = 10; 
-        let tapTimeout = null; 
-        const TAP_DEBOUNCE_DELAY = 300; 
 
         function addEventListenersToActiveCard() {
             const activeCard = flashcardStack.querySelector('.flashcard.active');
             if (!activeCard) return;
 
-            removeEventListenersFromActiveCard(); 
-
-            const handleCardTapOrClick = (e) => {
-                // Ensure the click/tap is not on the audio icon
-                if (e.target.classList.contains('audio-icon') || e.target.closest('.audio-icon')) {
-                    return; 
+            const clickHandler = (e) => {
+                const audioZone = activeCard.querySelector('.audio-zone');
+                const rect = audioZone.getBoundingClientRect();
+                if (e.clientX >= rect.left && e.clientX <= rect.right &&
+                    e.clientY >= rect.top && e.clientY <= rect.bottom) {
+                    e.stopPropagation(); 
+                    const currentCardDataIndex = parseInt(activeCard.dataset.cardDataIndex);
+                    if (!isNaN(currentCardDataIndex) && flashcardsData[currentCardDataIndex]) {
+                         audioPlayer.src = `audios/${flashcardsData[currentCardDataIndex].char}.mp3`;
+                         playAudio();
+                    }
+                    return;
                 }
 
                 let currentStage = parseInt(activeCard.dataset.currentDisplayStage || 0);
                 const nextStage = (currentStage + 1) % NUM_DISPLAY_STAGES; 
                 updateDisplayStage(activeCard, nextStage);
             };
+            activeCard.addEventListener('click', clickHandler);
+            currentCardListeners.click = clickHandler;
 
+            let startX = 0;
+            let startY = 0;
+            let isDragging = false;
+            let initialTransform = ''; 
 
             const mousedownHandler = (e) => {
-                if (e.button === 0 && !e.target.classList.contains('audio-icon') && !e.target.closest('.audio-icon')) { 
+                if (e.button === 0) { 
                     isDragging = true;
-                    isTap = true; 
                     startX = e.clientX;
                     startY = e.clientY;
                     initialTransform = activeCard.style.transform; 
                     activeCard.style.transition = 'none'; 
                     activeCard.style.cursor = 'grabbing';
-                    e.preventDefault(); 
-                    document.addEventListener('mousemove', mousemoveHandler);
-                    document.addEventListener('mouseup', globalMouseupHandler);
+                    e.preventDefault();
                 }
             };
             activeCard.addEventListener('mousedown', mousedownHandler);
@@ -779,11 +733,6 @@
                 if (!isDragging) return;
                 const deltaX = e.clientX - startX;
                 const deltaY = e.clientY - startY;
-
-                if (Math.abs(deltaX) > tapThreshold || Math.abs(deltaY) > tapThreshold) {
-                    isTap = false;
-                }
-
                 const rotation = deltaX / (window.innerWidth / 2) * 20; 
                 activeCard.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${rotation}deg)`;
 
@@ -795,13 +744,14 @@
                     activeCard.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
                 }
             };
+            document.addEventListener('mousemove', mousemoveHandler); 
+            currentCardListeners.mousemove = mousemoveHandler;
 
-            const globalMouseupHandler = (e) => { 
+            const mouseupHandler = (e) => {
                 if (!isDragging) return;
                 isDragging = false;
                 document.removeEventListener('mousemove', mousemoveHandler); 
-                document.removeEventListener('mouseup', globalMouseupHandler); 
-
+                
                 activeCard.style.transition = 'transform 0.3s ease-out, box-shadow 0.3s ease'; 
                 activeCard.style.cursor = 'grab';
                 activeCard.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
@@ -809,47 +759,32 @@
                 const deltaX = e.clientX - startX;
                 const swipeThreshold = 100; 
 
-                if (!isTap && Math.abs(deltaX) > swipeThreshold) { 
+                if (Math.abs(deltaX) > swipeThreshold) {
                     const direction = deltaX > 0 ? 'right' : 'left';
                     swipeCard(direction);
-                } else if (isTap) { 
-                    if (!tapTimeout) {
-                        handleCardTapOrClick(e); 
-                        tapTimeout = setTimeout(() => {
-                            tapTimeout = null;
-                        }, TAP_DEBOUNCE_DELAY);
-                    }
                 } else {
                     activeCard.style.transform = initialTransform; 
                 }
             };
+            document.addEventListener('mouseup', mouseupHandler); 
+            currentCardListeners.mouseup = mouseupHandler;
+
 
             const touchstartHandler = (e) => {
-                if (e.touches.length === 1 && !e.target.classList.contains('audio-icon') && !e.target.closest('.audio-icon')) { 
-                    isDragging = true;
-                    isTap = true; 
-                    startX = e.touches[0].clientX;
-                    startY = e.touches[0].clientY;
-                    initialTransform = activeCard.style.transform;
-                    activeCard.style.transition = 'none';
-                    e.preventDefault(); 
-                    document.addEventListener('touchmove', touchmoveHandler, { passive: false });
-                    document.addEventListener('touchend', globalTouchendHandler);
-                    document.addEventListener('touchcancel', globalTouchendHandler);
-                }
+                isDragging = true;
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                initialTransform = activeCard.style.transform;
+                activeCard.style.transition = 'none';
+                e.preventDefault();
             };
             activeCard.addEventListener('touchstart', touchstartHandler);
             currentCardListeners.touchstart = touchstartHandler;
 
             const touchmoveHandler = (e) => {
-                if (!isDragging || e.touches.length === 0) return; 
+                if (!isDragging) return;
                 const deltaX = e.touches[0].clientX - startX;
                 const deltaY = e.touches[0].clientY - startY;
-
-                if (Math.abs(deltaX) > tapThreshold || Math.abs(deltaY) > tapThreshold) {
-                    isTap = false;
-                }
-
                 const rotation = deltaX / (window.innerWidth / 2) * 20;
                 activeCard.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${rotation}deg)`;
 
@@ -861,68 +796,51 @@
                     activeCard.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
                 }
             };
+            document.addEventListener('touchmove', touchmoveHandler);
+            currentCardListeners.touchmove = touchmoveHandler;
 
-            const globalTouchendHandler = (e) => {
+            const touchendHandler = (e) => {
                 if (!isDragging) return;
                 isDragging = false;
                 document.removeEventListener('touchmove', touchmoveHandler);
-                document.removeEventListener('touchend', globalTouchendHandler);
-                document.removeEventListener('touchcancel', globalTouchendHandler);
-
+                
                 activeCard.style.transition = 'transform 0.3s ease-out, box-shadow 0.3s ease'; 
                 activeCard.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
 
                 const deltaX = e.changedTouches[0].clientX - startX;
                 const swipeThreshold = 100;
 
-                if (!isTap && Math.abs(deltaX) > swipeThreshold) { 
+                if (Math.abs(deltaX) > swipeThreshold) {
                     const direction = deltaX > 0 ? 'right' : 'left';
                     swipeCard(direction);
-                } else if (isTap) { 
-                    if (!tapTimeout) {
-                        handleCardTapOrClick(e); 
-                        tapTimeout = setTimeout(() => {
-                            tapTimeout = null;
-                        }, TAP_DEBOUNCE_DELAY);
-                    }
                 } else {
                     activeCard.style.transform = initialTransform;
                 }
             };
+            document.addEventListener('touchend', touchendHandler);
+            currentCardListeners.touchend = touchendHandler;
         }
 
         function removeEventListenersFromActiveCard() {
             const activeCard = flashcardStack.querySelector('.flashcard.active');
-            if (!activeCard) return;
-
-            if (currentCardListeners.mousedown) activeCard.removeEventListener('mousedown', currentCardListeners.mousedown);
-            document.removeEventListener('mousemove', currentCardListeners.mousemoveHandler); 
-            document.removeEventListener('mouseup', currentCardListeners.globalMouseupHandler);
-            
-            if (currentCardListeners.touchstart) activeCard.removeEventListener('touchstart', currentCardListeners.touchstart);
-            document.removeEventListener('touchmove', currentCardListeners.touchmoveHandler); 
-            document.removeEventListener('touchend', currentCardListeners.globalTouchendHandler);
-            document.removeEventListener('touchcancel', currentCardListeners.globalTouchendHandler);
-
+            if (activeCard) {
+                if (currentCardListeners.click) activeCard.removeEventListener('click', currentCardListeners.click);
+                if (currentCardListeners.mousedown) activeCard.removeEventListener('mousedown', currentCardListeners.mousedown);
+                if (currentCardListeners.mousemove) document.removeEventListener('mousemove', currentCardListeners.mousemove);
+                if (currentCardListeners.mouseup) document.removeEventListener('mouseup', currentCardListeners.mouseup);
+                if (currentCardListeners.touchstart) activeCard.removeEventListener('touchstart', currentCardListeners.touchstart);
+                if (currentCardListeners.touchmove) document.removeEventListener('touchmove', currentCardListeners.touchmove);
+                if (currentCardListeners.touchend) document.removeEventListener('touchend', currentCardListeners.touchend);
+            }
             currentCardListeners = {}; 
         }
         
-        // --- Audio Play Function (now using local MP3s) ---
-        function playAudioForCard(cardDataIndex) {
-            if (!isNaN(cardDataIndex) && flashcardsData[cardDataIndex] && flashcardsData[cardDataIndex].char) { 
-                const charToSpeak = flashcardsData[cardDataIndex].char;
-                const audioFilePath = `${charToSpeak}.mp3`; // Assuming MP3s are named after the character, e.g., "我.mp3"
-                
-                audioPlayer.src = audioFilePath;
-                audioPlayer.load(); // Load the new audio file
-                audioPlayer.play().catch(error => {
-                    console.error("Error playing audio:", error);
-                    // Minimal alert, hoping the explicit click allows it
-                    alert("Impossible de lire l'audio. Assurez-vous que le fichier MP3 existe et est bien nommé.");
-                });
-            } else {
-                console.warn("No character or audio path available for playback.");
+        function playAudio() {
+            if (!audioPlayer.paused) {
+                audioPlayer.pause();
+                audioPlayer.currentTime = 0;
             }
+            audioPlayer.play().catch(e => console.error("Error playing audio:", e));
         }
 
         // --- Score Overlay Logic ---
@@ -996,7 +914,8 @@
             isSwipingUp = false;
         });
         
-        homeIndicatorBar.addEventListener('click', showScoreOverlay); 
+        // For mouse users, a simple click on the bar can open it
+        homeIndicatorBar.addEventListener('click', showScoreOverlay);
 
 
         // Close overlay on click outside modal or Escape key
@@ -1018,8 +937,10 @@
                 for (let i = 0; i < cardScores.length; i++) {
                     cardScores[i] = INITIAL_SCORE;
                 }
-                updateScoreDisplay(); 
-                showFeedback('Scores réinitialisés !', 'incorrect'); 
+                updateScoreDisplay(); // Refresh the score display
+                showFeedback('Scores réinitialisés !', 'incorrect'); // Green for success
+                // Optionally hide the overlay after reset or let user review
+                // hideScoreOverlay(); 
             }
         });
 

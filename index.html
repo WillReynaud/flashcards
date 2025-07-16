@@ -118,26 +118,24 @@
         /* Audio zone positioned specifically for better mobile tap */
         .audio-zone { 
             position: absolute;
-            bottom: 0px; /* Aligned to bottom edge */
-            left: 0px; /* Aligned to left edge */
-            width: 100px; /* Fixed size, easier to tap */
-            height: 100px; /* Fixed size */
+            bottom: 0px; 
+            left: 0px; 
+            width: 100px; 
+            height: 100px; 
             cursor: pointer;
             z-index: 10; 
-            /* Optional: visually debug area */
-            /* background-color: rgba(0, 255, 0, 0.2); */ 
-            border-top-right-radius: 15px; /* Match card radius for aesthetics */
+            border-top-right-radius: 15px; 
             box-sizing: border-box;
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
-        /* Add an icon or text inside audio zone to indicate it's tappable */
+        /* Make icon transparent */
         .audio-zone::after {
-            content: '🔊'; /* Speaker emoji */
-            font-size: 2em; /* Make icon visible */
-            color: rgba(0,0,0,0.5); /* Slightly transparent */
+            content: '🔊'; 
+            font-size: 2em; 
+            color: rgba(0,0,0,0); /* Set color to transparent */
         }
 
 
@@ -291,7 +289,7 @@
             background-color: #000;
             border-radius: 100px; 
             z-index: 150; 
-            cursor: pointer; /* Changed to pointer as it's clickable on desktop too */
+            cursor: pointer; 
         }
 
         #reset-button {
@@ -303,7 +301,7 @@
             font-size: 1em;
             cursor: pointer;
             margin-top: 20px;
-            align-self: center; /* Center the button in the modal */
+            align-self: center; 
             box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
             transition: background-color 0.2s ease, transform 0.1s ease;
         }
@@ -626,7 +624,7 @@
         function swipeCard(direction, onComplete) {
             const activeCard = flashcardStack.querySelector('.flashcard.active');
             if (!activeCard) {
-                if (onComplete) onComplete(); // Call complete even if no card
+                if (onComplete) onComplete(); 
                 return;
             }
 
@@ -663,19 +661,16 @@
                     const newCardElement = createFlashcardElement(newCardDataIndex, flashcardStack.children.length); 
                     flashcardStack.appendChild(newCardElement);
                 } else if (flashcardsData.length > 0 && cardDataQueue.length === 0) {
-                     // If all cards have been seen and queue is empty, repopulate
-                     // This could lead to seeing same cards if all are "mastered"
-                     // or if there are fewer cards than stack size
                      fillCardQueue(); 
                      if (cardDataQueue.length > 0) {
-                        const newCardDataIndex = cardDataQueue[0]; // Take the first from newly filled queue
+                        const newCardDataIndex = cardDataQueue[0]; 
                         const newCardElement = createFlashcardElement(newCardDataIndex, flashcardStack.children.length);
                         flashcardStack.appendChild(newCardElement);
                      }
                 }
 
 
-                applyStackStyles(); // Reapply styles to new stack configuration
+                applyStackStyles(); 
                 if (onComplete) onComplete();
 
             }, { once: true });
@@ -694,7 +689,6 @@
                     cards[i].style.transform = 'translateY(0) scale(1)'; 
                     cards[i].classList.add('active');
                     updateDisplayStage(cards[i], 0); 
-                    // Event listeners are added/removed in addEventListenersToActiveCard, called after swipeCard
                 } else if (i === 1) {
                     cards[i].style.transform = 'translateY(calc(10px + 1vw)) scale(0.95)';
                 } else if (i === 2) {
@@ -704,7 +698,6 @@
                     cards[i].style.opacity = '0'; 
                 }
             }
-            // After applying styles, ensure the active card has its listeners
             addEventListenersToActiveCard(); 
         }
 
@@ -733,7 +726,6 @@
             const activeCard = flashcardStack.querySelector('.flashcard.active');
             if (!activeCard) return;
 
-            // Remove any previous listeners to avoid duplicates
             removeEventListenersFromActiveCard(); 
 
             // --- Mouse Events ---
@@ -792,14 +784,12 @@
                 if (!isTap && Math.abs(deltaX) > swipeThreshold) { 
                     const direction = deltaX > 0 ? 'right' : 'left';
                     swipeCard(direction);
-                } else if (isTap) { // This handles the simple click/tap for rotation
+                } else if (isTap) { 
                     handleCardInteraction(e);
                 } else {
                     activeCard.style.transform = initialTransform; 
                 }
             };
-            // Event listener is added on mousedown and removed here
-
 
             // --- Touch Events ---
             const touchstartHandler = (e) => {
@@ -810,7 +800,6 @@
                     startY = e.touches[0].clientY;
                     initialTransform = activeCard.style.transform;
                     activeCard.style.transition = 'none';
-                    // We don't preventDefault here, only if a drag actually starts
                     document.addEventListener('touchmove', touchmoveHandler, { passive: false });
                     document.addEventListener('touchend', globalTouchendHandler);
                     document.addEventListener('touchcancel', globalTouchendHandler);
@@ -824,9 +813,10 @@
                 const deltaX = e.touches[0].clientX - startX;
                 const deltaY = e.touches[0].clientY - startY;
 
+                // Only prevent default if a significant movement (not just a tap) is detected
                 if (Math.abs(deltaX) > tapThreshold || Math.abs(deltaY) > tapThreshold) {
                     isTap = false;
-                    e.preventDefault(); // Prevent scrolling only if a drag starts
+                    e.preventDefault(); 
                 }
 
                 const rotation = deltaX / (window.innerWidth / 2) * 20;
@@ -840,7 +830,6 @@
                     activeCard.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
                 }
             };
-            // Event listener is added on touchstart and removed on touchend/touchcancel
 
             const globalTouchendHandler = (e) => {
                 if (!isDragging) return;
@@ -858,23 +847,20 @@
                 if (!isTap && Math.abs(deltaX) > swipeThreshold) { 
                     const direction = deltaX > 0 ? 'right' : 'left';
                     swipeCard(direction);
-                } else if (isTap) { // This handles the simple tap for rotation
+                } else if (isTap) { 
                     handleCardInteraction(e);
                 } else {
                     activeCard.style.transform = initialTransform;
                 }
             };
-            // Event listener is added on touchstart and removed here
 
-            // Consolidated function for tap/click (card rotation or audio play)
             const handleCardInteraction = (e) => {
                 const audioZone = activeCard.querySelector('.audio-zone');
                 // Check if the interaction originated from within the audio zone
                 if (audioZone && audioZone.contains(e.target)) {
-                    e.stopPropagation(); // Prevent card rotation if audio zone is clicked
+                    e.stopPropagation(); 
                     const currentCardDataIndex = parseInt(activeCard.dataset.cardDataIndex);
                     if (!isNaN(currentCardDataIndex) && flashcardsData[currentCardDataIndex]) {
-                         // Only attempt to play if audio source is available
                          if (flashcardsData[currentCardDataIndex].char) { 
                              audioPlayer.src = `audios/${flashcardsData[currentCardDataIndex].char}.mp3`;
                              playAudio();
@@ -882,28 +868,28 @@
                              console.warn("No character available for audio playback.");
                          }
                     }
-                    return;
+                    return; // Prevent card rotation if audio zone is clicked/tapped
                 }
+                
                 // If it's a tap/click and not on the audio zone, rotate the card
                 let currentStage = parseInt(activeCard.dataset.currentDisplayStage || 0);
                 const nextStage = (currentStage + 1) % NUM_DISPLAY_STAGES; 
                 updateDisplayStage(activeCard, nextStage);
             };
-            // No direct 'click' or 'touchend' listeners on the card itself,
-            // the logic is now within the globalMouseupHandler and globalTouchendHandler based on `isTap`.
         }
 
         function removeEventListenersFromActiveCard() {
-            // Remove listeners that are dynamically added to `document` or `activeCard`
-            if (currentCardListeners.mousedown) flashcardStack.removeEventListener('mousedown', currentCardListeners.mousedown);
-            if (currentCardListeners.mousemove) document.removeEventListener('mousemove', currentCardListeners.mousemove);
-            if (currentCardListeners.globalMouseup) document.removeEventListener('mouseup', currentCardListeners.globalMouseup);
-            
-            if (currentCardListeners.touchstart) flashcardStack.removeEventListener('touchstart', currentCardListeners.touchstart);
-            if (currentCardListeners.touchmove) document.removeEventListener('touchmove', currentCardListeners.touchmove);
-            if (currentCardListeners.globalTouchend) document.removeEventListener('touchend', currentCardListeners.globalTouchend);
-            if (currentCardListeners.globalTouchcancel) document.removeEventListener('touchcancel', currentCardListeners.globalTouchcancel);
-            
+            if (currentCardListeners.mousedown) {
+                flashcardStack.removeEventListener('mousedown', currentCardListeners.mousedown);
+                document.removeEventListener('mousemove', currentCardListeners.mousemoveHandler); // Make sure these are removed
+                document.removeEventListener('mouseup', currentCardListeners.globalMouseupHandler);
+            }
+            if (currentCardListeners.touchstart) {
+                flashcardStack.removeEventListener('touchstart', currentCardListeners.touchstart);
+                document.removeEventListener('touchmove', currentCardListeners.touchmoveHandler); // Make sure these are removed
+                document.removeEventListener('touchend', currentCardListeners.globalTouchendHandler);
+                document.removeEventListener('touchcancel', currentCardListeners.globalTouchendHandler);
+            }
             currentCardListeners = {}; // Clear the stored listeners
         }
         
@@ -986,7 +972,7 @@
             isSwipingUp = false;
         });
         
-        homeIndicatorBar.addEventListener('click', showScoreOverlay); // Added this back for desktop clicks
+        homeIndicatorBar.addEventListener('click', showScoreOverlay); 
 
 
         // Close overlay on click outside modal or Escape key

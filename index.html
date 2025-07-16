@@ -86,21 +86,20 @@
         }
 
         .flashcard-front h2 {
-            font-size: clamp(4em, 10vw, 8em);
+            font-size: clamp(4em, 10vw, 8em); /* Adjusted min size for better mobile visibility */
             font-weight: bold;
         }
 
         .flashcard-middle h2 {
-            font-size: clamp(2em, 5vw, 3em);
+            font-size: clamp(2em, 5vw, 3em); /* Adjusted min size */
         }
 
         .flashcard-back h2 {
-            font-size: clamp(1.8em, 4vw, 2.5em);
+            font-size: clamp(1.8em, 4vw, 2.5em); /* Adjusted min size */
         }
         
-        /* New style for example sentence */
         .flashcard-example h2 {
-            font-size: clamp(1.2em, 3vw, 1.8em);
+            font-size: clamp(1.2em, 3vw, 1.8em); /* Adjusted min size */
             padding: 10px;
             line-height: 1.5;
         }
@@ -116,15 +115,29 @@
             color: #000; 
         }
 
+        /* Audio zone positioned specifically for better mobile tap */
         .audio-zone { 
             position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 30%;
-            height: 30%;
+            bottom: 0px; 
+            left: 0px; 
+            width: 100px; 
+            height: 100px; 
             cursor: pointer;
             z-index: 10; 
+            border-top-right-radius: 15px; 
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
+
+        /* Make icon transparent */
+        .audio-zone::after {
+            content: '🔊'; 
+            font-size: 2em; 
+            color: rgba(0,0,0,0); /* Set color to transparent */
+        }
+
 
         #feedback {
             position: fixed;
@@ -276,7 +289,7 @@
             background-color: #000;
             border-radius: 100px; 
             z-index: 150; 
-            cursor: grab;
+            cursor: pointer; 
         }
 
         #reset-button {
@@ -288,7 +301,7 @@
             font-size: 1em;
             cursor: pointer;
             margin-top: 20px;
-            align-self: center; /* Center the button in the modal */
+            align-self: center; 
             box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
             transition: background-color 0.2s ease, transform 0.1s ease;
         }
@@ -485,7 +498,7 @@
         ];
 
         let cardScores = new Array(flashcardsData.length).fill(2); 
-        const INITIAL_SCORE = 2; // Keep track of the initial score for reset
+        const INITIAL_SCORE = 2; 
         const SCORE_MAX = 5;
         const SCORE_MIN = 0;
         const NUM_CARDS_IN_STACK = 3; 
@@ -530,21 +543,25 @@
                 let newIndex = getWeightedRandomCardIndex();
                 if (newIndex !== -1) {
                     const displayedCardDataIndices = Array.from(flashcardStack.children).map(cardEl => parseInt(cardEl.dataset.cardDataIndex));
-                    if (!displayedCardDataIndices.includes(newIndex)) {
+                    // Check if the new index is already in the current stack or in the queue to avoid duplicates right away
+                    if (!displayedCardDataIndices.includes(newIndex) && !cardDataQueue.includes(newIndex)) {
                         cardDataQueue.push(newIndex);
                     } else {
+                        // If it's a duplicate, try to find another unique card
                         let foundUnique = false;
                         for(let i = 0; i < flashcardsData.length; i++) {
                             if (!displayedCardDataIndices.includes(i) && !cardDataQueue.includes(i)) {
-                                newIndex = i;
+                                newIndex = i; // Found a unique index
                                 cardDataQueue.push(newIndex);
                                 foundUnique = true;
                                 break;
                             }
                         }
-                        if (!foundUnique) {
-                            console.warn("Could not find a unique card to add to queue.");
-                            break;
+                        if (!foundUnique && flashcardsData.length > 0) { // If no unique card left, allow duplicates if needed to fill stack
+                            cardDataQueue.push(newIndex); 
+                        } else if (flashcardsData.length === 0) {
+                             console.warn("No cards available in flashcardsData.");
+                             break;
                         }
                     }
                 } else {
@@ -595,16 +612,21 @@
                     flashcardStack.appendChild(cardElement);
                 }
             }
+            // Ensure at least one card is in the stack before trying to set active
             if (flashcardStack.children.length > 0) {
                 flashcardStack.children[0].classList.add('active');
                 updateDisplayStage(flashcardStack.children[0], 0); 
             }
+            applyStackStyles(); // Apply initial stack styles after cards are added
             addEventListenersToActiveCard();
         }
 
         function swipeCard(direction, onComplete) {
             const activeCard = flashcardStack.querySelector('.flashcard.active');
-            if (!activeCard) return;
+            if (!activeCard) {
+                if (onComplete) onComplete(); 
+                return;
+            }
 
             removeEventListenersFromActiveCard(); 
 
@@ -633,13 +655,22 @@
                 cardDataQueue.shift(); 
                 fillCardQueue(); 
 
+                // Add new card at the end of the visual stack
                 if (cardDataQueue.length > NUM_CARDS_IN_STACK - 1) { 
                     const newCardDataIndex = cardDataQueue[NUM_CARDS_IN_STACK - 1]; 
                     const newCardElement = createFlashcardElement(newCardDataIndex, flashcardStack.children.length); 
                     flashcardStack.appendChild(newCardElement);
+                } else if (flashcardsData.length > 0 && cardDataQueue.length === 0) {
+                     fillCardQueue(); 
+                     if (cardDataQueue.length > 0) {
+                        const newCardDataIndex = cardDataQueue[0]; 
+                        const newCardElement = createFlashcardElement(newCardDataIndex, flashcardStack.children.length);
+                        flashcardStack.appendChild(newCardElement);
+                     }
                 }
 
-                applyStackStyles();
+
+                applyStackStyles(); 
                 if (onComplete) onComplete();
 
             }, { once: true });
@@ -658,7 +689,6 @@
                     cards[i].style.transform = 'translateY(0) scale(1)'; 
                     cards[i].classList.add('active');
                     updateDisplayStage(cards[i], 0); 
-                    addEventListenersToActiveCard(); 
                 } else if (i === 1) {
                     cards[i].style.transform = 'translateY(calc(10px + 1vw)) scale(0.95)';
                 } else if (i === 2) {
@@ -668,6 +698,7 @@
                     cards[i].style.opacity = '0'; 
                 }
             }
+            addEventListenersToActiveCard(); 
         }
 
 
@@ -684,46 +715,32 @@
         }
 
         let currentCardListeners = {}; 
+        let isDragging = false; 
+        let startX = 0;
+        let startY = 0;
+        let initialTransform = '';
+        let isTap = true; 
+        const tapThreshold = 10; 
 
         function addEventListenersToActiveCard() {
             const activeCard = flashcardStack.querySelector('.flashcard.active');
             if (!activeCard) return;
 
-            const clickHandler = (e) => {
-                const audioZone = activeCard.querySelector('.audio-zone');
-                const rect = audioZone.getBoundingClientRect();
-                if (e.clientX >= rect.left && e.clientX <= rect.right &&
-                    e.clientY >= rect.top && e.clientY <= rect.bottom) {
-                    e.stopPropagation(); 
-                    const currentCardDataIndex = parseInt(activeCard.dataset.cardDataIndex);
-                    if (!isNaN(currentCardDataIndex) && flashcardsData[currentCardDataIndex]) {
-                         audioPlayer.src = `audios/${flashcardsData[currentCardDataIndex].char}.mp3`;
-                         playAudio();
-                    }
-                    return;
-                }
+            removeEventListenersFromActiveCard(); 
 
-                let currentStage = parseInt(activeCard.dataset.currentDisplayStage || 0);
-                const nextStage = (currentStage + 1) % NUM_DISPLAY_STAGES; 
-                updateDisplayStage(activeCard, nextStage);
-            };
-            activeCard.addEventListener('click', clickHandler);
-            currentCardListeners.click = clickHandler;
-
-            let startX = 0;
-            let startY = 0;
-            let isDragging = false;
-            let initialTransform = ''; 
-
+            // --- Mouse Events ---
             const mousedownHandler = (e) => {
                 if (e.button === 0) { 
                     isDragging = true;
+                    isTap = true; 
                     startX = e.clientX;
                     startY = e.clientY;
                     initialTransform = activeCard.style.transform; 
                     activeCard.style.transition = 'none'; 
                     activeCard.style.cursor = 'grabbing';
-                    e.preventDefault();
+                    e.preventDefault(); 
+                    document.addEventListener('mousemove', mousemoveHandler);
+                    document.addEventListener('mouseup', globalMouseupHandler);
                 }
             };
             activeCard.addEventListener('mousedown', mousedownHandler);
@@ -733,6 +750,11 @@
                 if (!isDragging) return;
                 const deltaX = e.clientX - startX;
                 const deltaY = e.clientY - startY;
+
+                if (Math.abs(deltaX) > tapThreshold || Math.abs(deltaY) > tapThreshold) {
+                    isTap = false;
+                }
+
                 const rotation = deltaX / (window.innerWidth / 2) * 20; 
                 activeCard.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${rotation}deg)`;
 
@@ -744,14 +766,14 @@
                     activeCard.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
                 }
             };
-            document.addEventListener('mousemove', mousemoveHandler); 
-            currentCardListeners.mousemove = mousemoveHandler;
+            // Event listener is added on mousedown and removed on mouseup
 
-            const mouseupHandler = (e) => {
+            const globalMouseupHandler = (e) => { 
                 if (!isDragging) return;
                 isDragging = false;
                 document.removeEventListener('mousemove', mousemoveHandler); 
-                
+                document.removeEventListener('mouseup', globalMouseupHandler); 
+
                 activeCard.style.transition = 'transform 0.3s ease-out, box-shadow 0.3s ease'; 
                 activeCard.style.cursor = 'grab';
                 activeCard.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
@@ -759,32 +781,44 @@
                 const deltaX = e.clientX - startX;
                 const swipeThreshold = 100; 
 
-                if (Math.abs(deltaX) > swipeThreshold) {
+                if (!isTap && Math.abs(deltaX) > swipeThreshold) { 
                     const direction = deltaX > 0 ? 'right' : 'left';
                     swipeCard(direction);
+                } else if (isTap) { 
+                    handleCardInteraction(e);
                 } else {
                     activeCard.style.transform = initialTransform; 
                 }
             };
-            document.addEventListener('mouseup', mouseupHandler); 
-            currentCardListeners.mouseup = mouseupHandler;
 
-
+            // --- Touch Events ---
             const touchstartHandler = (e) => {
-                isDragging = true;
-                startX = e.touches[0].clientX;
-                startY = e.touches[0].clientY;
-                initialTransform = activeCard.style.transform;
-                activeCard.style.transition = 'none';
-                e.preventDefault();
+                if (e.touches.length === 1) { 
+                    isDragging = true;
+                    isTap = true; 
+                    startX = e.touches[0].clientX;
+                    startY = e.touches[0].clientY;
+                    initialTransform = activeCard.style.transform;
+                    activeCard.style.transition = 'none';
+                    document.addEventListener('touchmove', touchmoveHandler, { passive: false });
+                    document.addEventListener('touchend', globalTouchendHandler);
+                    document.addEventListener('touchcancel', globalTouchendHandler);
+                }
             };
             activeCard.addEventListener('touchstart', touchstartHandler);
             currentCardListeners.touchstart = touchstartHandler;
 
             const touchmoveHandler = (e) => {
-                if (!isDragging) return;
+                if (!isDragging || e.touches.length === 0) return; 
                 const deltaX = e.touches[0].clientX - startX;
                 const deltaY = e.touches[0].clientY - startY;
+
+                // Only prevent default if a significant movement (not just a tap) is detected
+                if (Math.abs(deltaX) > tapThreshold || Math.abs(deltaY) > tapThreshold) {
+                    isTap = false;
+                    e.preventDefault(); 
+                }
+
                 const rotation = deltaX / (window.innerWidth / 2) * 20;
                 activeCard.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${rotation}deg)`;
 
@@ -796,43 +830,67 @@
                     activeCard.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
                 }
             };
-            document.addEventListener('touchmove', touchmoveHandler);
-            currentCardListeners.touchmove = touchmoveHandler;
 
-            const touchendHandler = (e) => {
+            const globalTouchendHandler = (e) => {
                 if (!isDragging) return;
                 isDragging = false;
                 document.removeEventListener('touchmove', touchmoveHandler);
-                
+                document.removeEventListener('touchend', globalTouchendHandler);
+                document.removeEventListener('touchcancel', globalTouchendHandler);
+
                 activeCard.style.transition = 'transform 0.3s ease-out, box-shadow 0.3s ease'; 
                 activeCard.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
 
                 const deltaX = e.changedTouches[0].clientX - startX;
                 const swipeThreshold = 100;
 
-                if (Math.abs(deltaX) > swipeThreshold) {
+                if (!isTap && Math.abs(deltaX) > swipeThreshold) { 
                     const direction = deltaX > 0 ? 'right' : 'left';
                     swipeCard(direction);
+                } else if (isTap) { 
+                    handleCardInteraction(e);
                 } else {
                     activeCard.style.transform = initialTransform;
                 }
             };
-            document.addEventListener('touchend', touchendHandler);
-            currentCardListeners.touchend = touchendHandler;
+
+            const handleCardInteraction = (e) => {
+                const audioZone = activeCard.querySelector('.audio-zone');
+                // Check if the interaction originated from within the audio zone
+                if (audioZone && audioZone.contains(e.target)) {
+                    e.stopPropagation(); 
+                    const currentCardDataIndex = parseInt(activeCard.dataset.cardDataIndex);
+                    if (!isNaN(currentCardDataIndex) && flashcardsData[currentCardDataIndex]) {
+                         if (flashcardsData[currentCardDataIndex].char) { 
+                             audioPlayer.src = `audios/${flashcardsData[currentCardDataIndex].char}.mp3`;
+                             playAudio();
+                         } else {
+                             console.warn("No character available for audio playback.");
+                         }
+                    }
+                    return; // Prevent card rotation if audio zone is clicked/tapped
+                }
+                
+                // If it's a tap/click and not on the audio zone, rotate the card
+                let currentStage = parseInt(activeCard.dataset.currentDisplayStage || 0);
+                const nextStage = (currentStage + 1) % NUM_DISPLAY_STAGES; 
+                updateDisplayStage(activeCard, nextStage);
+            };
         }
 
         function removeEventListenersFromActiveCard() {
-            const activeCard = flashcardStack.querySelector('.flashcard.active');
-            if (activeCard) {
-                if (currentCardListeners.click) activeCard.removeEventListener('click', currentCardListeners.click);
-                if (currentCardListeners.mousedown) activeCard.removeEventListener('mousedown', currentCardListeners.mousedown);
-                if (currentCardListeners.mousemove) document.removeEventListener('mousemove', currentCardListeners.mousemove);
-                if (currentCardListeners.mouseup) document.removeEventListener('mouseup', currentCardListeners.mouseup);
-                if (currentCardListeners.touchstart) activeCard.removeEventListener('touchstart', currentCardListeners.touchstart);
-                if (currentCardListeners.touchmove) document.removeEventListener('touchmove', currentCardListeners.touchmove);
-                if (currentCardListeners.touchend) document.removeEventListener('touchend', currentCardListeners.touchend);
+            if (currentCardListeners.mousedown) {
+                flashcardStack.removeEventListener('mousedown', currentCardListeners.mousedown);
+                document.removeEventListener('mousemove', currentCardListeners.mousemoveHandler); // Make sure these are removed
+                document.removeEventListener('mouseup', currentCardListeners.globalMouseupHandler);
             }
-            currentCardListeners = {}; 
+            if (currentCardListeners.touchstart) {
+                flashcardStack.removeEventListener('touchstart', currentCardListeners.touchstart);
+                document.removeEventListener('touchmove', currentCardListeners.touchmoveHandler); // Make sure these are removed
+                document.removeEventListener('touchend', currentCardListeners.globalTouchendHandler);
+                document.removeEventListener('touchcancel', currentCardListeners.globalTouchendHandler);
+            }
+            currentCardListeners = {}; // Clear the stored listeners
         }
         
         function playAudio() {
@@ -914,8 +972,7 @@
             isSwipingUp = false;
         });
         
-        // For mouse users, a simple click on the bar can open it
-        homeIndicatorBar.addEventListener('click', showScoreOverlay);
+        homeIndicatorBar.addEventListener('click', showScoreOverlay); 
 
 
         // Close overlay on click outside modal or Escape key
@@ -937,10 +994,8 @@
                 for (let i = 0; i < cardScores.length; i++) {
                     cardScores[i] = INITIAL_SCORE;
                 }
-                updateScoreDisplay(); // Refresh the score display
-                showFeedback('Scores réinitialisés !', 'incorrect'); // Green for success
-                // Optionally hide the overlay after reset or let user review
-                // hideScoreOverlay(); 
+                updateScoreDisplay(); 
+                showFeedback('Scores réinitialisés !', 'incorrect'); 
             }
         });
 

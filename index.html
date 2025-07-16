@@ -515,8 +515,8 @@
         const NUM_DISPLAY_STAGES = 4; // Char, Pinyin, Translation, Example
 
         const flashcardStack = document.getElementById('flashcard-stack');
-        const audioPlayer = document.getElementById('audio-player'); // Still here if you want to use it for custom audio files later
-        const audioButton = document.getElementById('audio-button'); // NEW: Get the audio button
+        const audioPlayer = document.getElementById('audio-player'); 
+        const audioButton = document.getElementById('audio-button'); 
         const feedbackDisplay = document.getElementById('feedback');
         const scoreOverlay = document.getElementById('score-overlay');
         const homeIndicatorBar = document.getElementById('home-indicator-bar');
@@ -593,7 +593,7 @@
             const cardValues = [
                 flashcardsData[cardDataIndex].char,
                 flashcardsData[cardDataIndex].pinyin,
-                flashcardsData[cardDataIndex].actualTranslation || flashcardsData[cardDataIndex].translation, // Use actualTranslation if available
+                flashcardsData[cardDataIndex].actualTranslation || flashcardsData[cardDataIndex].translation, 
                 flashcardsData[cardDataIndex].example 
             ];
 
@@ -607,11 +607,6 @@
                 flashcardDiv.appendChild(contentDiv);
             });
 
-            // REMOVED: Audio zone is no longer part of the card
-            // const audioZoneDiv = document.createElement('div');
-            // audioZoneDiv.classList.add('audio-zone'); 
-            // flashcardDiv.appendChild(audioZoneDiv);
-
             return flashcardDiv;
         }
 
@@ -624,12 +619,11 @@
                     flashcardStack.appendChild(cardElement);
                 }
             }
-            // Ensure at least one card is in the stack before trying to set active
             if (flashcardStack.children.length > 0) {
                 flashcardStack.children[0].classList.add('active');
                 updateDisplayStage(flashcardStack.children[0], 0); 
             }
-            applyStackStyles(); // Apply initial stack styles after cards are added
+            applyStackStyles(); 
             addEventListenersToActiveCard();
         }
 
@@ -667,7 +661,6 @@
                 cardDataQueue.shift(); 
                 fillCardQueue(); 
 
-                // Add new card at the end of the visual stack
                 if (cardDataQueue.length > NUM_CARDS_IN_STACK - 1) { 
                     const newCardDataIndex = cardDataQueue[NUM_CARDS_IN_STACK - 1]; 
                     const newCardElement = createFlashcardElement(newCardDataIndex, flashcardStack.children.length); 
@@ -700,7 +693,7 @@
                 if (i === 0) {
                     cards[i].style.transform = 'translateY(0) scale(1)'; 
                     cards[i].classList.add('active');
-                    updateDisplayStage(cards[i], 0); // Always reset to stage 0 for new active card
+                    updateDisplayStage(cards[i], 0); 
                 } else if (i === 1) {
                     cards[i].style.transform = 'translateY(calc(10px + 1vw)) scale(0.95)';
                 } else if (i === 2) {
@@ -742,16 +735,13 @@
 
             removeEventListenersFromActiveCard(); 
 
-            // --- Common Tap/Click Handler (for the card itself) ---
             const handleCardTapOrClick = (e) => {
-                // If it's a tap/click, rotate the card
                 let currentStage = parseInt(activeCard.dataset.currentDisplayStage || 0);
                 const nextStage = (currentStage + 1) % NUM_DISPLAY_STAGES; 
                 updateDisplayStage(activeCard, nextStage);
             };
 
 
-            // --- Mouse Events ---
             const mousedownHandler = (e) => {
                 if (e.button === 0) { 
                     isDragging = true;
@@ -761,7 +751,7 @@
                     initialTransform = activeCard.style.transform; 
                     activeCard.style.transition = 'none'; 
                     activeCard.style.cursor = 'grabbing';
-                    e.preventDefault(); // Prevent default browser drag behavior
+                    e.preventDefault(); 
                     document.addEventListener('mousemove', mousemoveHandler);
                     document.addEventListener('mouseup', globalMouseupHandler);
                 }
@@ -807,7 +797,6 @@
                     const direction = deltaX > 0 ? 'right' : 'left';
                     swipeCard(direction);
                 } else if (isTap) { 
-                    // Apply debounce for mouse clicks too for consistency
                     if (!tapTimeout) {
                         handleCardTapOrClick(e); 
                         tapTimeout = setTimeout(() => {
@@ -819,7 +808,6 @@
                 }
             };
 
-            // --- Touch Events ---
             const touchstartHandler = (e) => {
                 if (e.touches.length === 1) { 
                     isDragging = true;
@@ -828,7 +816,7 @@
                     startY = e.touches[0].clientY;
                     initialTransform = activeCard.style.transform;
                     activeCard.style.transition = 'none';
-                    e.preventDefault(); // Prevent scrolling/zooming immediately on touch
+                    e.preventDefault(); 
                     document.addEventListener('touchmove', touchmoveHandler, { passive: false });
                     document.addEventListener('touchend', globalTouchendHandler);
                     document.addEventListener('touchcancel', globalTouchendHandler);
@@ -891,7 +879,6 @@
             const activeCard = flashcardStack.querySelector('.flashcard.active');
             if (!activeCard) return;
 
-            // Remove all previously added listeners for card interactions
             if (currentCardListeners.mousedown) activeCard.removeEventListener('mousedown', currentCardListeners.mousedown);
             document.removeEventListener('mousemove', currentCardListeners.mousemoveHandler); 
             document.removeEventListener('mouseup', currentCardListeners.globalMouseupHandler);
@@ -901,10 +888,10 @@
             document.removeEventListener('touchend', currentCardListeners.globalTouchendHandler);
             document.removeEventListener('touchcancel', currentCardListeners.globalTouchendHandler);
 
-            currentCardListeners = {}; // Clear the stored listeners
+            currentCardListeners = {}; 
         }
         
-        // --- NEW: Global Audio Play Function ---
+        // --- Audio Play Function (now using local MP3s) ---
         function playAudioForActiveCard() {
             const activeCard = flashcardStack.querySelector('.flashcard.active');
             if (!activeCard) {
@@ -914,18 +901,23 @@
             const currentCardDataIndex = parseInt(activeCard.dataset.cardDataIndex);
             if (!isNaN(currentCardDataIndex) && flashcardsData[currentCardDataIndex] && flashcardsData[currentCardDataIndex].char) { 
                 const charToSpeak = flashcardsData[currentCardDataIndex].char;
-                const utterance = new SpeechSynthesisUtterance(charToSpeak);
-                utterance.lang = 'zh-CN'; // Set language to Chinese
-                speechSynthesis.speak(utterance);
+                const audioFilePath = `${charToSpeak}.mp3`; // Assuming MP3s are named after the character, e.g., "我.mp3"
+                
+                audioPlayer.src = audioFilePath;
+                audioPlayer.load(); // Load the new audio file
+                audioPlayer.play().catch(error => {
+                    console.error("Error playing audio:", error);
+                    // This catch is important for mobile browsers that might block autoplay
+                    alert("Le navigateur a peut-être bloqué la lecture automatique de l'audio. Veuillez interagir manuellement ou vérifier les paramètres de votre navigateur.");
+                });
             } else {
-                console.warn("No character available for audio playback.");
+                console.warn("No character or audio path available for playback.");
             }
         }
 
-        // --- NEW: Audio Button Event Listeners ---
         audioButton.addEventListener('click', playAudioForActiveCard);
         audioButton.addEventListener('touchend', (e) => {
-            e.preventDefault(); // Prevent potential phantom clicks
+            e.preventDefault(); 
             playAudioForActiveCard();
         });
 

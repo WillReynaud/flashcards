@@ -97,6 +97,14 @@
         .flashcard-back h2 {
             font-size: clamp(1.8em, 4vw, 2.5em);
         }
+        
+        /* New style for example sentence */
+        .flashcard-example h2 {
+            font-size: clamp(1.2em, 3vw, 1.8em);
+            padding: 10px;
+            line-height: 1.5;
+        }
+
 
         .flashcard-content h2 {
             margin: 0;
@@ -260,15 +268,39 @@
         /* Home Indicator Bar */
         #home-indicator-bar {
             position: fixed;
-            bottom: 8px; /* A little bit from the very bottom */
+            bottom: 8px; 
             left: 50%;
             transform: translateX(-50%);
-            width: 130px; /* Standard iPhone bar width */
-            height: 5px; /* Standard iPhone bar height */
+            width: 130px; 
+            height: 5px; 
             background-color: #000;
-            border-radius: 100px; /* Fully rounded corners */
-            z-index: 150; /* Above cards, below overlay */
+            border-radius: 100px; 
+            z-index: 150; 
             cursor: grab;
+        }
+
+        #reset-button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            margin-top: 20px;
+            align-self: center; /* Center the button in the modal */
+            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+
+        #reset-button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        #reset-button:active {
+            background-color: #004085;
+            transform: translateY(0);
         }
     </style>
 </head>
@@ -295,172 +327,176 @@
                     <h4>Maîtrisé (4-5)</h4>
                 </div>
             </div>
+            <button id="reset-button">Réinitialiser les scores</button>
         </div>
     </div>
 
     <script>
         const flashcardsData = [
-            { char: "我", pinyin: "wǒ", translation: "je / moi" },
-            { char: "你", pinyin: "nǐ", translation: "tu / toi" },
-            { char: "他", pinyin: "tā", translation: "il / lui" },
-            { char: "她", pinyin: "tā", translation: "elle" },
-            { char: "我们", pinyin: "wǒmen", translation: "nous" },
-            { char: "你们", pinyin: "nǐmen", translation: "vous" },
-            { char: "他们", pinyin: "tāmen", translation: "ils / eux" },
-            { char: "她们", pinyin: "tāmen", translation: "elles" },
-            { char: "姓", pinyin: "xìng", translation: "s'appeler (nom de famille)" },
-            { char: "叫", pinyin: "jiào", translation: "s'appeler (prénom)" },
-            { char: "学", pinyin: "xué", translation: "étudier" },
-            { char: "是", pinyin: "shì", translation: "être" },
-            { char: "生", pinyin: "shēng", translation: "naître / élève" },
-            { char: "有", pinyin: "yǒu", translation: "avoir" },
-            { char: "说", pinyin: "shuō", translation: "dire / parler" },
-            { char: "在", pinyin: "zài", translation: "être (quelque part)" },
-            { char: "去", pinyin: "qù", translation: "aller" },
-            { char: "来", pinyin: "lái", translation: "venir" },
-            { char: "回", pinyin: "huí", translation: "revenir" },
-            { char: "住", pinyin: "zhù", translation: "habiter / demeurer" },
-            { char: "工作", pinyin: "gōngzuò", translation: "travailler" },
-            { char: "休息", pinyin: "xiūxi", translation: "se reposer" },
-            { char: "找", pinyin: "zhǎo", translation: "chercher" },
-            { char: "问", pinyin: "wèn", translation: "demander" },
-            { char: "喝", pinyin: "hē", translation: "boire" },
-            { char: "想", pinyin: "xiâng", translation: "vouloir" },
-            { char: "知道", pinyin: "zhīdào", translation: "savoir" },
-            { char: "看", pinyin: "kàn", translation: "voir / observer" },
-            { char: "不", pinyin: "bù", translation: "négation" },
-            { char: "没", pinyin: "méi", translation: "négation (passé)" },
-            { char: "呢", pinyin: "ne", translation: "particule interrogative" },
-            { char: "吗", pinyin: "ma", translation: "particule interrogative" },
-            { char: "吧", pinyin: "ba", translation: "particule de suggestion" },
-            { char: "什么", pinyin: "shénme", translation: "quoi / que" },
-            { char: "哪", pinyin: "nǎ", translation: "quel / lequel" },
-            { char: "几", pinyin: "jǐ", translation: "combien (petit nombre) / quelques" },
-            { char: "谁", pinyin: "shéi", translation: "qui ?" },
-            { char: "也", pinyin: "yě", translation: "aussi" },
-            { char: "这", pinyin: "zhè", translation: "ce / cette" },
-            { char: "的", pinyin: "de", translation: "particule possessive" },
-            { char: "个", pinyin: "gè", translation: "classificateur général" },
-            { char: "两", pinyin: "liǎng", translation: "deux (quantité)" },
-            { char: "本", pinyin: "běn", translation: "classificateur pour les livres / racine / origine / fondamentale" },
-            { char: "口", pinyin: "kǒu", translation: "classificateur membres famille / bouche" },
-            { char: "一", pinyin: "yī", translation: "un" },
-            { char: "二", pinyin: "èr", translation: "deux" },
-            { char: "三", pinyin: "sān", translation: "trois" },
-            { char: "四", pinyin: "sì", translation: "quatre" },
-            { char: "五", pinyin: "wǔ", translation: "cinq" },
-            { char: "六", pinyin: "liù", translation: "six" },
-            { char: "七", pinyin: "qī", translation: "sept" },
-            { char: "八", pinyin: "bā", translation: "huit" },
-            { char: "九", pinyin: "jiǔ", translation: "neuf" },
-            { char: "十", pinyin: "shí", translation: "dix" },
-            { char: "多少", pinyin: "duōshǎo", translation: "combien ?" },
-            { char: "多大", pinyin: "duō dà", translation: "quel âge ?" },
-            { char: "岁", pinyin: "suì", translation: "âge" },
-            { char: "几岁", pinyin: "jǐ suì", translation: "Pour les enfants (moins de 10 ans)" },
-            { char: "您多大年纪", pinyin: "Nín duō dà niánjì ?", translation: "Pour être poli avec des personnes âgées" },
-            { char: "在", pinyin: "zài", translation: "être (quelque part)" },
-            { char: "哪儿", pinyin: "nǎr", translation: "où" },
-            { char: "年", pinyin: "nián", translation: "année" },
-            { char: "星期", pinyin: "xīngqī", translation: "semaine" },
-            { char: "日", pinyin: "rì", translation: "jour" },
-            { char: "号", pinyin: "hào", translation: "jour/date (oral)" },
-            { char: "月", pinyin: "yuè", translation: "mois" },
-            { char: "星期日", pinyin: "xīngqīrì", translation: "dimanche" },
-            { char: "生日", pinyin: "shēngrì", translation: "anniversaire" },
-            { char: "几", pinyin: "jǐ", translation: "combien (petit nombre / heure / âge)" },
-            { char: "今天", pinyin: "jīntiān", translation: "aujourd'hui" },
-            { char: "明天", pinyin: "míngtiān", translation: "demain" },
-            { char: "昨天", pinyin: "zuótiānhier", translation: "hier" },
-            { char: "上午", pinyin: "shàngwǔ", translation: "matin" },
-            { char: "中午", pinyin: "zhōngwǔ", translation: "midi" },
-            { char: "下午", pinyin: "xiàwǔ", translation: "après-midi" },
-            { char: "早上", pinyin: "zǎoshang", translation: "matin (très tôt)" },
-            { char: "晚上", pinyin: "wǎnshang", translation: "soir" },
-            { char: "今年", pinyin: "jīnnián", translation: "cette année" },
-            { char: "明年", pinyin: "míngnián", translation: "l'année prochaine" },
-            { char: "去年", pinyin: "qùnián", translation: "l'année dernière" },
-            { char: "钟", pinyin: "zhōng", translation: "horloge / utilisé pour l'heure précise" },
-            { char: "点", pinyin: "diǎn", translation: "point / unité de compte pour l'heure" },
-            { char: "分", pinyin: "fēn", translation: "minute" },
-            { char: "刻", pinyin: "kè", translation: "quart d'heure" },
-            { char: "半", pinyin: "bàn", translation: "demi (30 minutes)" },
-            { char: "三点钟", pinyin: "sān diǎn zhōng", translation: "3 heures" },
-            { char: "三点五分", pinyin: "sān diǎn wǔ fēn", translation: "3h05" },
-            { char: "六点一刻", pinyin: "liù diǎn yī kè", translation: "6h15" },
-            { char: "六点半", pinyin: "liù diǎn bàn", translation: "6h30" },
-            { char: "七点差一刻", pinyin: "qī diǎn chà yī kè", translation: "6h45" },
-            { char: "六点三刻", pinyin: "liù diǎn sān kè", translation: "6h45 (alternative)" },
-            { char: "好", pinyin: "hǎo", translation: "bien" },
-            { char: "大", pinyin: "dà", translation: "grand" },
-            { char: "小", pinyin: "xiǎo", translation: "petit" },
-            { char: "老", pinyin: "lǎo", translation: "vieux" },
-            { char: "过", pinyin: "guò", translation: "(passé d'expérience)" },
-            { char: "名字", pinyin: "míngzi", translation: "prénom" },
-            { char: "姓", pinyin: "xìng", translation: "nom de famille" },
-            { char: "人", pinyin: "rén", translation: "personne" },
-            { char: "这个人", pinyin: "zhè ge rén", translation: "cette personne-ci" },
-            { char: "那个人", pinyin: "nà ge rén", translation: "cette personne-là" },
-            { char: "都", pinyin: "dōu", translation: "tous / tout" },
-            { char: "朋友", pinyin: "péngyǒu", translation: "ami" },
-            { char: "男朋友", pinyin: "nán péngyǒu", translation: "petit ami" },
-            { char: "女朋友", pinyin: "nǚ péngyǒu", translation: "petite amie" },
-            { char: "姐姐", pinyin: "jiějie", translation: "grande sœur" },
-            { char: "妹妹", pinyin: "mèimei", translation: "petite sœur" },
-            { char: "哥哥", pinyin: "gēge", translation: "grand frère" },
-            { char: "弟弟", pinyin: "dìdi", translation: "petit frère" },
-            { char: "爸爸", pinyin: "bàba", translation: "papa" },
-            { char: "妈妈", pinyin: "māmā", translation: "maman" },
-            { char: "孩子", pinyin: "háizi", translation: "enfant" },
-            { char: "父母", pinyin: "fùmǔ", translation: "parents" },
-            { char: "学生", pinyin: "xuéshēng", translation: "étudiant" },
-            { char: "大学生", pinyin: "dàxuéshēng", translation: "étudiant (supérieur)" },
-            { char: "中学生", pinyin: "zhōngxuéshēng", translation: "élève du secondaire" },
-            { char: "小学生", pinyin: "xiǎoxuéshēng", translation: "élève du primaire" },
-            { char: "博士", pinyin: "bóshì", translation: "docteur (titre académique)" },
-            { char: "汉语", pinyin: "hànyǔ", translation: "langue chinoise" },
-            { char: "日语", pinyin: "rìyǔ", translation: "langue japonaise" },
-            { char: "法语", pinyin: "fǎyǔ", translation: "langue française" },
-            { char: "英语", pinyin: "yīngyǔ", translation: "langue anglaise" },
-            { char: "德语", pinyin: "déyǔ", translation: "langue allemande" },
-            { char: "文", pinyin: "wén", translation: "écriture / langue" },
-            { char: "历史", pinyin: "lìshǐ", translation: "histoire" },
-            { char: "艺术", pinyin: "yìshù", translation: "art" },
-            { char: "文学", pinyin: "wénxué", translation: "littérature" },
-            { char: "数学", pinyin: "shùxué", translation: "mathématiques" },
-            { char: "中国", pinyin: "zhōngguó", translation: "Chine" },
-            { char: "北京", pinyin: "běijīng", translation: "Pékin" },
-            { char: "法国", pinyin: "fǎguó", translation: "France" },
-            { char: "车", pinyin: "chē", translation: "véhicule" },
-            { char: "汽车", pinyin: "qìchē", translation: "voiture" },
-            { char: "自行车", pinyin: "zìxíngchē", translation: "vélo" },
-            { char: "国", pinyin: "guó", translation: "pays" },
-            { char: "人口", pinyin: "rénkǒupopulation", translation: "population" },
-            { char: "北方人", pinyin: "běifāngréngens", translation: "gens du nord" },
-            { char: "南方人", pinyin: "nánfāngréngens", translation: "gens du sud" },
-            { char: "中", pinyin: "zhōng", translation: "au centre / milieu" },
-            { char: "北", pinyin: "běi", translation: "nord" },
-            { char: "南", pinyin: "nán", translation: "sud" },
-            { char: "东", pinyin: "dōng", translation: "est" },
-            { char: "西", pinyin: "xī", translation: "ouest" },
-            { char: "茶", pinyin: "chá", translation: "thé" },
-            { char: "是", pinyin: "shì", translation: "Oui" },
-            { char: "不", pinyin: "bù", translation: "non" },
-            { char: "红", pinyin: "hóng", translation: "rouge" },
-            { char: "绿", pinyin: "lü", translation: "Vert" },
-            { char: "奶", pinyin: "nǎi", translation: "lait" }
+            { char: "我", pinyin: "wǒ", translation: "je / moi", example: "我是一个学生 (Wǒ shì yīgè xuéshēng) - Je suis un étudiant." },
+            { char: "你", pinyin: "nǐ", translation: "tu / toi", example: "你好吗？ (Nǐ hǎo ma?) - Comment vas-tu ?" },
+            { char: "他", pinyin: "tā", translation: "il / lui", example: "他很高 (Tā hěn gāo) - Il est très grand." },
+            { char: "她", pinyin: "tā", translation: "elle", example: "她很漂亮 (Tā hěn piàoliang) - Elle est très belle." },
+            { char: "我们", pinyin: "wǒmen", translation: "nous", example: "我们去吃饭 (Wǒmen qù chīfàn) - Nous allons manger." },
+            { char: "你们", pinyin: "nǐmen", translation: "vous", example: "你们好！ (Nǐmen hǎo!) - Bonjour à vous !" },
+            { char: "他们", pinyin: "tāmen", translation: "ils / eux", example: "他们是中国人 (Tāmen shì zhōngguó rén) - Ce sont des Chinois." },
+            { char: "她们", pinyin: "tāmen", translation: "elles", example: "她们是朋友 (Tāmen shì péngyǒu) - Elles sont amies." },
+            { char: "姓", pinyin: "xìng", translation: "s'appeler (nom de famille)", example: "你姓什么？ (Nǐ xìng shénme?) - Comment t'appelles-tu (nom de famille) ?" },
+            { char: "叫", pinyin: "jiào", translation: "s'appeler (prénom)", example: "我叫王明 (Wǒ jiào Wáng Míng) - Je m'appelle Wang Ming." },
+            { char: "学", pinyin: "xué", translation: "étudier", example: "我学汉语 (Wǒ xué hànyǔ) - J'étudie le chinois." },
+            { char: "是", pinyin: "shì", translation: "être", example: "我是法国人 (Wǒ shì Fàguó rén) - Je suis français." },
+            { char: "生", pinyin: "shēng", translation: "naître / élève", example: "我的生日是今天 (Wǒ de shēngrì shì jīntiān) - Mon anniversaire est aujourd'hui." },
+            { char: "有", pinyin: "yǒu", translation: "avoir", example: "我有一个苹果 (Wǒ yǒu yīgè píngguǒ) - J'ai une pomme." },
+            { char: "说", pinyin: "shuō", translation: "dire / parler", example: "你会说汉语吗？ (Nǐ huì shuō hànyǔ ma?) - Sais-tu parler chinois ?" },
+            { char: "在", pinyin: "zài", translation: "être (quelque part)", example: "我在家 (Wǒ zài jiā) - Je suis à la maison." },
+            { char: "去", pinyin: "qù", translation: "aller", example: "我们去学校 (Wǒmen qù xuéxiào) - Nous allons à l'école." },
+            { char: "来", pinyin: "lái", translation: "venir", example: "请你来我家 (Qǐng nǐ lái wǒ jiā) - S'il te plaît, viens chez moi." },
+            { char: "回", pinyin: "huí", translation: "revenir", example: "我回家了 (Wǒ huí jiā le) - Je suis rentré à la maison." },
+            { char: "住", pinyin: "zhù", translation: "habiter / demeurer", example: "你住在哪里？ (Nǐ zhù zài nǎlǐ?) - Où habites-tu ?" },
+            { char: "工作", pinyin: "gōngzuò", translation: "travailler", example: "我在北京工作 (Wǒ zài Běijīng gōngzuò) - Je travaille à Pékin." },
+            { char: "休息", pinyin: "xiūxi", translation: "se reposer", example: "我需要休息 (Wǒ xūyào xiūxi) - J'ai besoin de repos." },
+            { char: "找", pinyin: "zhǎo", translation: "chercher", example: "我在找我的书 (Wǒ zài zhǎo wǒ de shū) - Je cherche mon livre." },
+            { char: "问", pinyin: "wèn", translation: "demander", example: "我问一个问题 (Wǒ wèn yīgè wèntí) - Je pose une question." },
+            { char: "喝", pinyin: "hē", translation: "boire", example: "我想喝茶 (Wǒ xiǎng hē chá) - J'aimerais boire du thé." },
+            { char: "想", pinyin: "xiâng", translation: "vouloir", example: "我想去中国 (Wǒ xiǎng qù Zhōngguó) - J'aimerais aller en Chine." },
+            { char: "知道", pinyin: "zhīdào", translation: "savoir", example: "我不知道 (Wǒ bù zhīdào) - Je ne sais pas." },
+            { char: "看", pinyin: "kàn", translation: "voir / observer", example: "你看什么？ (Nǐ kàn shénme?) - Que regardes-tu ?" },
+            { char: "不", pinyin: "bù", translation: "négation", example: "我不好 (Wǒ bù hǎo) - Je ne vais pas bien." },
+            { char: "没", pinyin: "méi", translation: "négation (passé)", example: "我没去过 (Wǒ méi qùguò) - Je n'y suis jamais allé." },
+            { char: "呢", pinyin: "ne", translation: "particule interrogative", example: "你呢？ (Nǐ ne?) - Et toi ?" },
+            { char: "吗", pinyin: "ma", translation: "particule interrogative", example: "你是学生吗？ (Nǐ shì xuéshēng ma?) - Es-tu étudiant ?" },
+            { char: "吧", pinyin: "ba", translation: "particule de suggestion", example: "我们走吧 (Wǒmen zǒu ba) - Allons-y." },
+            { char: "什么", pinyin: "shénme", translation: "quoi / que", example: "这是什么？ (Zhè shì shénme?) - Qu'est-ce que c'est ?" },
+            { char: "哪", pinyin: "nǎ", translation: "quel / lequel", example: "你是哪国人？ (Nǐ shì nǎ guó rén?) - De quel pays es-tu ?" },
+            { char: "几", pinyin: "jǐ", translation: "combien (petit nombre) / quelques", example: "你有几本书？ (Nǐ yǒu jǐ běn shū?) - Tu as combien de livres ?" },
+            { char: "谁", pinyin: "shéi", translation: "qui ?", example: "他是谁？ (Tā shì shéi?) - Qui est-il ?" },
+            { char: "也", pinyin: "yě", translation: "aussi", example: "我也去 (Wǒ yě qù) - J'y vais aussi." },
+            { char: "这", pinyin: "zhè", translation: "ce / cette", example: "这是我的书 (Zhè shì wǒ de shū) - C'est mon livre." },
+            { char: "的", pinyin: "de", translation: "particule possessive", example: "我的笔 (Wǒ de bǐ) - Mon stylo." },
+            { char: "个", pinyin: "gè", translation: "classificateur général", example: "一个人 (Yīgè rén) - Une personne." },
+            { char: "两", pinyin: "liǎng", translation: "deux (quantité)", example: "两个人 (Liǎng gè rén) - Deux personnes." },
+            { char: "本", pinyin: "běn", translation: "classificateur pour les livres / racine / origine / fondamentale", example: "一本书 (Yī běn shū) - Un livre." },
+            { char: "口", pinyin: "kǒu", translation: "classificateur membres famille / bouche", example: "三口人 (Sān kǒu rén) - Trois membres de la famille." },
+            { char: "一", pinyin: "yī", translation: "un", example: "一个苹果 (Yīgè píngguǒ) - Une pomme." },
+            { char: "二", pinyin: "èr", translation: "deux", example: "二月 (Èryuè) - Février." },
+            { char: "三", pinyin: "sān", translation: "trois", example: "三个学生 (Sān gè xuéshēng) - Trois étudiants." },
+            { char: "四", pinyin: "sì", translation: "quatre", example: "四点 (Sì diǎn) - Quatre heures." },
+            { char: "五", pinyin: "wǔ", translation: "cinq", example: "五本书 (Wǔ běn shū) - Cinq livres." },
+            { char: "六", pinyin: "liù", translation: "six", example: "六天 (Liù tiān) - Six jours." },
+            { char: "七", pinyin: "qī", translation: "sept", example: "七月 (Qīyuè) - Juillet." },
+            { char: "八", pinyin: "bā", translation: "huit", example: "八岁 (Bā suì) - Huit ans." },
+            { char: "九", pinyin: "jiǔ", translation: "neuf", example: "九点钟 (Jiǔ diǎn zhōng) - Neuf heures." },
+            { char: "十", pinyin: "shí", translation: "dix", example: "十个人 (Shí gè rén) - Dix personnes." },
+            { char: "多少", pinyin: "duōshǎo", translation: "combien ?", example: "你有多少钱？ (Nǐ yǒu duōshǎo qián?) - Combien d'argent as-tu ?" },
+            { char: "多大", pinyin: "duō dà", translation: "quel âge ?", example: "你多大了？ (Nǐ duō dà le?) - Quel âge as-tu ?" },
+            { char: "岁", pinyin: "suì", translation: "âge", example: "我十八岁 (Wǒ shíbā suì) - J'ai dix-huit ans." },
+            { char: "几岁", pinyin: "jǐ suì", translation: "Pour les enfants (moins de 10 ans)", example: "你几岁了？ (Nǐ jǐ suì le?) - Quel âge as-tu (enfant) ?" },
+            { char: "您多大年纪", pinyin: "Nín duō dà niánjì ?", translation: "Pour être poli avec des personnes âgées", example: "您多大年纪了？ (Nín duō dà niánjì le?) - Quel âge avez-vous (poli) ?" },
+            { char: "在", pinyin: "zài", translation: "être (quelque part)", example: "我在家 (Wǒ zài jiā) - Je suis à la maison." },
+            { char: "哪儿", pinyin: "nǎr", translation: "où", example: "你去哪儿？ (Nǐ qù nǎr?) - Où vas-tu ?" },
+            { char: "年", pinyin: "nián", translation: "année", example: "今年是二零二五年 (Jīnnián shì èr líng èr wǔ nián) - Cette année est 2025." },
+            { char: "星期", pinyin: "xīngqī", translation: "semaine", example: "一个星期 (Yīgè xīngqī) - Une semaine." },
+            { char: "日", pinyin: "rì", translation: "jour", example: "今天是星期日 (Jīntiān shì xīngqīrì) - Aujourd'hui est dimanche." },
+            { char: "号", pinyin: "hào", translation: "jour/date (oral)", example: "十月一号 (Shí yuè yī hào) - Le 1er octobre." },
+            { char: "月", pinyin: "yuè", translation: "mois", example: "三月 (Sānyuè) - Mars." },
+            { char: "星期日", pinyin: "xīngqīrì", translation: "dimanche", example: "星期日休息 (Xīngqīrì xiūxi) - Se reposer le dimanche." },
+            { char: "生日", pinyin: "shēngrì", translation: "anniversaire", example: "祝你生日快乐 (Zhù nǐ shēngrì kuàilè) - Joyeux anniversaire." },
+            { char: "几", pinyin: "jǐ", translation: "combien (petit nombre / heure / âge)", example: "现在几点了？ (Xiànzài jǐ diǎn le?) - Quelle heure est-il maintenant ?" },
+            { char: "今天", pinyin: "jīntiān", translation: "aujourd'hui", example: "今天天气很好 (Jīntiān tiānqì hěn hǎo) - Il fait beau aujourd'hui." },
+            { char: "明天", pinyin: "míngtiān", translation: "demain", example: "明天见 (Míngtiān jiàn) - À demain." },
+            { char: "昨天", pinyin: "zuótiānhier", translation: "hier", example: "昨天我没去 (Zuótiān wǒ méi qù) - Je n'y suis pas allé hier." },
+            { char: "上午", pinyin: "shàngwǔ", translation: "matin", example: "上午好 (Shàngwǔ hǎo) - Bonjour (matin)." },
+            { char: "中午", pinyin: "zhōngwǔ", translation: "midi", example: "中午吃饭 (Zhōngwǔ chīfàn) - Manger à midi." },
+            { char: "下午", pinyin: "xiàwǔ", translation: "après-midi", example: "下午去公园 (Xiàwǔ qù gōngyuán) - Aller au parc l'après-midi." },
+            { char: "早上", pinyin: "zǎoshang", translation: "matin (très tôt)", example: "早上好 (Zǎoshang hǎo) - Bonjour (très tôt le matin)." },
+            { char: "晚上", pinyin: "wǎnshang", translation: "soir", example: "晚上好 (Wǎnshang hǎo) - Bonsoir." },
+            { char: "今年", pinyin: "jīnnián", translation: "cette année", example: "我今年三十岁 (Wǒ jīnnián sānshí suì) - J'ai trente ans cette année." },
+            { char: "明年", pinyin: "míngnián", translation: "l'année prochaine", example: "明年再见 (Míngnián zàijiàn) - À l'année prochaine." },
+            { char: "去年", pinyin: "qùnián", translation: "l'année dernière", example: "去年我去了日本 (Qùnián wǒ qù le Rìběn) - L'année dernière, je suis allé au Japon." },
+            { char: "钟", pinyin: "zhōng", translation: "horloge / utilisé pour l'heure précise", example: "三点钟 (Sān diǎn zhōng) - Trois heures précises." },
+            { char: "点", pinyin: "diǎn", translation: "point / unité de compte pour l'heure", example: "现在五点 (Xiànzài wǔ diǎn) - Il est cinq heures." },
+            { char: "分", pinyin: "fēn", translation: "minute", example: "十分钟 (Shí fēnzhōng) - Dix minutes." },
+            { char: "刻", pinyin: "kè", translation: "quart d'heure", example: "两点一刻 (Liǎng diǎn yī kè) - Deux heures et quart." },
+            { char: "半", pinyin: "bàn", translation: "demi (30 minutes)", example: "三点半 (Sān diǎn bàn) - Trois heures et demie." },
+            { char: "三点钟", pinyin: "sān diǎn zhōng", translation: "3 heures", example: "火车三点钟开 (Huǒchē sān diǎn zhōng kāi) - Le train part à trois heures." },
+            { char: "三点五分", pinyin: "sān diǎn wǔ fēn", translation: "3h05", example: "会议三点五分开始 (Huìyì sān diǎn wǔ fēn kāishǐ) - La réunion commence à 3h05." },
+            { char: "六点一刻", pinyin: "liù diǎn yī kè", translation: "6h15", example: "我们六点一刻见面 (Wǒmen liù diǎn yī kè jiànmiàn) - On se voit à 6h15." },
+            { char: "六点半", pinyin: "liù diǎn bàn", translation: "6h30", example: "她六点半回家 (Tā liù diǎn bàn huí jiā) - Elle rentre à 6h30." },
+            { char: "七点差一刻", pinyin: "qī diǎn chà yī kè", translation: "6h45", example: "现在七点差一刻 (Xiànzài qī diǎn chà yī kè) - Il est 6h45 maintenant." },
+            { char: "六点三刻", pinyin: "liù diǎn sān kè", translation: "6h45 (alternative)", example: "他六点三刻到 (Tā liù diǎn sān kè dào) - Il arrive à 6h45." },
+            { char: "好", pinyin: "hǎo", translation: "bien", example: "我很好 (Wǒ hěn hǎo) - Je vais très bien." },
+            { char: "大", pinyin: "dà", translation: "grand", example: "这个房子很大 (Zhège fángzi hěn dà) - Cette maison est très grande." },
+            { char: "小", pinyin: "xiǎo", translation: "petit", example: "我的狗很小 (Wǒ de gǒu hěn xiǎo) - Mon chien est petit." },
+            { char: "老", pinyin: "lǎo", translation: "vieux", example: "他是一个老朋友 (Tā shì yīgè lǎo péngyǒu) - C'est un vieil ami." },
+            { char: "过", pinyin: "guò", translation: "(passé d'expérience)", example: "我去过中国 (Wǒ qùguò Zhōngguó) - Je suis allé en Chine (expérience)." },
+            { char: "名字", pinyin: "míngzi", translation: "prénom", example: "你的名字是什么？ (Nǐ de míngzi shì shénme?) - Quel est ton prénom ?" },
+            { char: "姓", pinyin: "xìng", translation: "nom de famille", example: "他姓李 (Tā xìng Lǐ) - Son nom de famille est Li." },
+            { char: "人", pinyin: "rén", translation: "personne", example: "中国人 (Zhōngguó rén) - Personne chinoise / Chinois." },
+            { char: "这个人", pinyin: "zhè ge rén", translation: "cette personne-ci", example: "这个人是谁？ (Zhège rén shì shéi?) - Qui est cette personne ?" },
+            { char: "那个人", pinyin: "nà ge rén", translation: "cette personne-là", example: "那个人是我的老师 (Nàgè rén shì wǒ de lǎoshī) - Cette personne-là est mon professeur." },
+            { char: "都", pinyin: "dōu", translation: "tous / tout", example: "我们都是学生 (Wǒmen dōu shì xuéshēng) - Nous sommes tous étudiants." },
+            { char: "朋友", pinyin: "péngyǒu", translation: "ami", example: "他是我的好朋友 (Tā shì wǒ de hǎo péngyǒu) - C'est mon bon ami." },
+            { char: "男朋友", pinyin: "nán péngyǒu", translation: "petit ami", example: "她有男朋友 (Tā yǒu nán péngyǒu) - Elle a un petit ami." },
+            { char: "女朋友", pinyin: "nǚ péngyǒu", translation: "petite amie", example: "他有女朋友 (Tā yǒu nǚ péngyǒu) - Il a une petite amie." },
+            { char: "姐姐", pinyin: "jiějie", translation: "grande sœur", example: "我有一个姐姐 (Wǒ yǒu yīgè jiějie) - J'ai une grande sœur." },
+            { char: "妹妹", pinyin: "mèimei", translation: "petite sœur", example: "我的妹妹很可爱 (Wǒ de mèimei hěn kě'ài) - Ma petite sœur est très mignonne." },
+            { char: "哥哥", pinyin: "gēge", translation: "grand frère", example: "我没有哥哥 (Wǒ méiyǒu gēge) - Je n'ai pas de grand frère." },
+            { char: "弟弟", pinyin: "dìdi", translation: "petit frère", example: "他是我弟弟 (Tā shì wǒ dìdi) - C'est mon petit frère." },
+            { char: "爸爸", pinyin: "bàba", translation: "papa", example: "我爱爸爸妈妈 (Wǒ ài bàba māmā) - J'aime papa et maman." },
+            { char: "妈妈", pinyin: "māmā", translation: "maman", example: "我妈妈在家 (Wǒ māma zài jiā) - Ma maman est à la maison." },
+            { char: "孩子", pinyin: "háizi", translation: "enfant", example: "她有两个孩子 (Tā yǒu liǎng gè háizi) - Elle a deux enfants." },
+            { char: "父母", pinyin: "fùmǔ", translation: "parents", example: "我的父母是中国人 (Wǒ de fùmǔ shì zhōngguó rén) - Mes parents sont chinois." },
+            { char: "学生", pinyin: "xuéshēng", translation: "étudiant", example: "他是一名学生 (Tā shì yī míng xuéshēng) - C'est un étudiant." },
+            { char: "大学生", pinyin: "dàxuéshēng", translation: "étudiant (supérieur)", example: "他是一个大学生 (Tā shì yīgè dàxuéshēng) - C'est un étudiant universitaire." },
+            { char: "中学生", pinyin: "zhōngxuéshēng", translation: "élève du secondaire", example: "我的表弟是中学生 (Wǒ de biǎodì shì zhōngxuéshēng) - Mon cousin est élève au collège/lycée." },
+            { char: "小学生", pinyin: "xiǎoxuéshēng", translation: "élève du primaire", example: "她是一个小学生 (Tā shì yīgè xiǎoxuéshēng) - C'est une élève de primaire." },
+            { char: "博士", pinyin: "bóshì", translation: "docteur (titre académique)", example: "他是博士 (Tā shì bóshì) - Il est docteur (PhD)." },
+            { char: "汉语", pinyin: "hànyǔ", translation: "langue chinoise", example: "我学汉语 (Wǒ xué hànyǔ) - J'apprends le chinois." },
+            { char: "日语", pinyin: "rìyǔ", translation: "langue japonaise", example: "你会说日语吗？ (Nǐ huì shuō rìyǔ ma?) - Parles-tu japonais ?" },
+            { char: "法语", pinyin: "fǎyǔ", translation: "langue française", example: "我来自法国，所以我说法语 (Wǒ láizì Fàguó, suǒyǐ wǒ shuō fǎyǔ) - Je viens de France, donc je parle français." },
+            { char: "英语", pinyin: "yīngyǔ", translation: "langue anglaise", example: "他英语很好 (Tā yīngyǔ hěn hǎo) - Son anglais est très bon." },
+            { char: "德语", pinyin: "déyǔ", translation: "langue allemande", example: "我不会说德语 (Wǒ bù huì shuō déyǔ) - Je ne parle pas allemand." },
+            { char: "文", pinyin: "wén", translation: "écriture / langue", example: "中文 (Zhōngwén) - Langue chinoise (écrite)." },
+            { char: "历史", pinyin: "lìshǐ", translation: "histoire", example: "我喜欢历史 (Wǒ xǐhuān lìshǐ) - J'aime l'histoire." },
+            { char: "艺术", pinyin: "yìshù", translation: "art", example: "她学习艺术 (Tā xuéxí yìshù) - Elle étudie l'art." },
+            { char: "文学", pinyin: "wénxué", translation: "littérature", example: "他对文学很感兴趣 (Tā duì wénxué hěn gǎn xìngqù) - Il est très intéressé par la littérature." },
+            { char: "数学", pinyin: "shùxué", translation: "mathématiques", example: "数学很难 (Shùxué hěn nán) - Les mathématiques sont difficiles." },
+            { char: "中国", pinyin: "zhōngguó", translation: "Chine", example: "我爱中国 (Wǒ ài Zhōngguó) - J'aime la Chine." },
+            { char: "北京", pinyin: "běijīng", translation: "Pékin", example: "我去过北京 (Wǒ qùguò Běijīng) - Je suis allé à Pékin." },
+            { char: "法国", pinyin: "fǎguó", translation: "France", example: "我是法国人 (Wǒ shì Fàguó rén) - Je suis français." },
+            { char: "车", pinyin: "chē", translation: "véhicule", example: "这辆车很漂亮 (Zhè liàng chē hěn piàoliang) - Cette voiture est très belle." },
+            { char: "汽车", pinyin: "qìchē", translation: "voiture", example: "他有一辆汽车 (Tā yǒu yī liàng qìchē) - Il a une voiture." },
+            { char: "自行车", pinyin: "zìxíngchē", translation: "vélo", example: "我骑自行车去上班 (Wǒ qí zìxíngchē qù shàngbān) - Je vais au travail à vélo." },
+            { char: "国", pinyin: "guó", translation: "pays", example: "你的国家是哪里？ (Nǐ de guójiā shì nǎlǐ?) - Quel est ton pays ?" },
+            { char: "人口", pinyin: "rénkǒupopulation", translation: "population", example: "中国人口很多 (Zhōngguó rénkǒu hěn duō) - La population chinoise est très nombreuse." },
+            { char: "北方人", pinyin: "běifāngréngens", translation: "gens du nord", example: "我是北方人 (Wǒ shì běifāng rén) - Je suis du nord (de la Chine)." },
+            { char: "南方人", pinyin: "nánfāngréngens", translation: "gens du sud", example: "他是南方人 (Tā shì nánfāng rén) - Il est du sud (de la Chine)." },
+            { char: "中", pinyin: "zhōng", translation: "au centre / milieu", example: "中间 (Zhōngjiān) - Au milieu." },
+            { char: "北", pinyin: "běi", translation: "nord", example: "北京在北方 (Běijīng zài běifāng) - Pékin est au nord." },
+            { char: "南", pinyin: "nán", translation: "sud", example: "南方很热 (Nánfāng hěn rè) - Le sud est très chaud." },
+            { char: "东", pinyin: "dōng", translation: "est", example: "东方 (Dōngfāng) - L'Est." },
+            { char: "西", pinyin: "xī", translation: "ouest", example: "西方文化 (Xīfāng wénhuà) - Culture occidentale." },
+            { char: "茶", pinyin: "chá", translation: "thé", example: "请喝茶 (Qǐng hē chá) - S'il vous plaît, buvez du thé." },
+            { char: "是", pinyin: "shì", translation: "Oui", example: "是的 (Shì de) - Oui, c'est ça." },
+            { char: "不", pinyin: "bù", translation: "non", example: "不对 (Bù duì) - Non, ce n'est pas juste." },
+            { char: "红", pinyin: "hóng", translation: "rouge", example: "红色 (Hóngsè) - Couleur rouge." },
+            { char: "绿", pinyin: "lü", translation: "Vert", example: "绿色 (Lǜsè) - Couleur verte." },
+            { char: "奶", pinyin: "nǎi", translation: "lait", example: "牛奶 (Niúnǎi) - Lait de vache." }
         ];
 
-        const cardScores = new Array(flashcardsData.length).fill(2); 
+        let cardScores = new Array(flashcardsData.length).fill(2); 
+        const INITIAL_SCORE = 2; // Keep track of the initial score for reset
         const SCORE_MAX = 5;
         const SCORE_MIN = 0;
         const NUM_CARDS_IN_STACK = 3; 
+        const NUM_DISPLAY_STAGES = 4; // Char, Pinyin, Translation, Example
 
         const flashcardStack = document.getElementById('flashcard-stack');
         const audioPlayer = document.getElementById('audio-player');
         const feedbackDisplay = document.getElementById('feedback');
         const scoreOverlay = document.getElementById('score-overlay');
         const homeIndicatorBar = document.getElementById('home-indicator-bar');
+        const resetButton = document.getElementById('reset-button');
         
         let cardDataQueue = []; 
 
@@ -525,11 +561,12 @@
             flashcardDiv.id = `flashcard-${domIndex}`;
             flashcardDiv.dataset.cardDataIndex = cardDataIndex; 
 
-            const cardContents = ['front', 'middle', 'back'];
+            const cardContents = ['front', 'middle', 'back', 'example'];
             const cardValues = [
                 flashcardsData[cardDataIndex].char,
                 flashcardsData[cardDataIndex].pinyin,
-                flashcardsData[cardDataIndex].translation
+                flashcardsData[cardDataIndex].translation,
+                flashcardsData[cardDataIndex].example 
             ];
 
             cardContents.forEach((type, i) => {
@@ -667,7 +704,7 @@
                 }
 
                 let currentStage = parseInt(activeCard.dataset.currentDisplayStage || 0);
-                const nextStage = (currentStage + 1) % 3; 
+                const nextStage = (currentStage + 1) % NUM_DISPLAY_STAGES; 
                 updateDisplayStage(activeCard, nextStage);
             };
             activeCard.addEventListener('click', clickHandler);
@@ -850,12 +887,12 @@
         // --- Home Indicator Bar Swipe Logic ---
         let touchStartY = 0;
         let isSwipingUp = false;
-        const SWIPE_UP_THRESHOLD = -50; // pixels, negative for upward movement
+        const SWIPE_UP_THRESHOLD = -50; 
 
         homeIndicatorBar.addEventListener('touchstart', (e) => {
             touchStartY = e.touches[0].clientY;
             isSwipingUp = true;
-            e.preventDefault(); // Prevent scrolling on touch devices
+            e.preventDefault(); 
         }, { passive: false });
 
         homeIndicatorBar.addEventListener('touchmove', (e) => {
@@ -863,20 +900,14 @@
             const currentY = e.touches[0].clientY;
             const deltaY = currentY - touchStartY;
 
-            // Optional: Provide visual feedback during swipe
-            // You could adjust the position of the modal slightly here, for example
-            // scoreOverlay.style.transform = `translateY(${Math.max(0, 100 + deltaY)}%)`;
-
             if (deltaY < SWIPE_UP_THRESHOLD) {
                 showScoreOverlay();
-                isSwipingUp = false; // Disable further swipe detection until touch ends
+                isSwipingUp = false; 
             }
         });
 
         homeIndicatorBar.addEventListener('touchend', () => {
             isSwipingUp = false;
-            // If not swiped enough, potentially reset any visual feedback here
-            // scoreOverlay.style.transform = 'translateY(100%)'; // If you added a dynamic transform in touchmove
         });
 
         homeIndicatorBar.addEventListener('touchcancel', () => {
@@ -889,7 +920,6 @@
 
         // Close overlay on click outside modal or Escape key
         scoreOverlay.addEventListener('click', (e) => {
-            // Only close if clicking the background, not the modal itself
             if (e.target === scoreOverlay) { 
                 hideScoreOverlay();
             }
@@ -898,6 +928,19 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && scoreOverlay.classList.contains('visible')) {
                 hideScoreOverlay();
+            }
+        });
+
+        // --- Reset Button Logic ---
+        resetButton.addEventListener('click', () => {
+            if (confirm("Êtes-vous sûr de vouloir réinitialiser tous les scores ? Cette action est irréversible.")) {
+                for (let i = 0; i < cardScores.length; i++) {
+                    cardScores[i] = INITIAL_SCORE;
+                }
+                updateScoreDisplay(); // Refresh the score display
+                showFeedback('Scores réinitialisés !', 'incorrect'); // Green for success
+                // Optionally hide the overlay after reset or let user review
+                // hideScoreOverlay(); 
             }
         });
 

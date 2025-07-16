@@ -117,34 +117,32 @@
             color: #000; 
         }
 
-        /* NEW: Audio Button Styles */
-        #audio-button {
-            background-color: #007bff;
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 50px; /* Pill shape */
-            font-size: 2em;
+        /* Audio icon inside the card */
+        .audio-icon {
+            position: absolute;
+            bottom: 15px; /* Adjust as needed */
+            right: 15px; /* Adjust as needed */
+            font-size: 2.5em; /* Adjust size of the speaker icon */
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
-            transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
-            outline: none; /* Remove outline on focus */
+            color: #007bff; /* Color of the icon */
+            transition: transform 0.1s ease-in-out, color 0.2s ease;
+            z-index: 10; /* Ensure it's above content */
+            background: none;
+            border: none;
+            padding: 0;
+            margin: 0;
             display: flex;
-            justify-content: center;
             align-items: center;
-            margin-top: 20px; /* Space from the flashcard stack */
+            justify-content: center;
         }
 
-        #audio-button:hover {
-            background-color: #0056b3;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+        .audio-icon:hover {
+            transform: scale(1.1);
+            color: #0056b3;
         }
 
-        #audio-button:active {
-            background-color: #004085;
-            transform: translateY(0);
-            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
+        .audio-icon:active {
+            transform: scale(0.95);
         }
 
         #feedback {
@@ -330,8 +328,6 @@
     <div id="flashcard-stack">
         </div>
 
-    <button id="audio-button">🔊</button>
-
     <audio id="audio-player"></audio>
 
     <div id="home-indicator-bar"></div>
@@ -516,7 +512,6 @@
 
         const flashcardStack = document.getElementById('flashcard-stack');
         const audioPlayer = document.getElementById('audio-player'); 
-        const audioButton = document.getElementById('audio-button'); 
         const feedbackDisplay = document.getElementById('feedback');
         const scoreOverlay = document.getElementById('score-overlay');
         const homeIndicatorBar = document.getElementById('home-indicator-bar');
@@ -606,6 +601,22 @@
                 contentDiv.appendChild(h2);
                 flashcardDiv.appendChild(contentDiv);
             });
+
+            // Add audio icon directly to the card
+            const audioIcon = document.createElement('button');
+            audioIcon.classList.add('audio-icon');
+            audioIcon.innerHTML = '🔊'; 
+            audioIcon.title = 'Écouter la prononciation';
+            audioIcon.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent card tap/swipe when clicking the icon
+                playAudioForCard(cardDataIndex);
+            });
+            audioIcon.addEventListener('touchend', (e) => {
+                e.stopPropagation(); // Prevent card tap/swipe when touching the icon
+                e.preventDefault(); // Prevent default touch behavior
+                playAudioForCard(cardDataIndex);
+            });
+            flashcardDiv.appendChild(audioIcon);
 
             return flashcardDiv;
         }
@@ -736,6 +747,11 @@
             removeEventListenersFromActiveCard(); 
 
             const handleCardTapOrClick = (e) => {
+                // Ensure the click/tap is not on the audio icon
+                if (e.target.classList.contains('audio-icon') || e.target.closest('.audio-icon')) {
+                    return; 
+                }
+
                 let currentStage = parseInt(activeCard.dataset.currentDisplayStage || 0);
                 const nextStage = (currentStage + 1) % NUM_DISPLAY_STAGES; 
                 updateDisplayStage(activeCard, nextStage);
@@ -743,7 +759,7 @@
 
 
             const mousedownHandler = (e) => {
-                if (e.button === 0) { 
+                if (e.button === 0 && !e.target.classList.contains('audio-icon') && !e.target.closest('.audio-icon')) { 
                     isDragging = true;
                     isTap = true; 
                     startX = e.clientX;
@@ -809,7 +825,7 @@
             };
 
             const touchstartHandler = (e) => {
-                if (e.touches.length === 1) { 
+                if (e.touches.length === 1 && !e.target.classList.contains('audio-icon') && !e.target.closest('.audio-icon')) { 
                     isDragging = true;
                     isTap = true; 
                     startX = e.touches[0].clientX;
@@ -892,35 +908,22 @@
         }
         
         // --- Audio Play Function (now using local MP3s) ---
-        function playAudioForActiveCard() {
-            const activeCard = flashcardStack.querySelector('.flashcard.active');
-            if (!activeCard) {
-                console.warn("No active card to play audio for.");
-                return;
-            }
-            const currentCardDataIndex = parseInt(activeCard.dataset.cardDataIndex);
-            if (!isNaN(currentCardDataIndex) && flashcardsData[currentCardDataIndex] && flashcardsData[currentCardDataIndex].char) { 
-                const charToSpeak = flashcardsData[currentCardDataIndex].char;
+        function playAudioForCard(cardDataIndex) {
+            if (!isNaN(cardDataIndex) && flashcardsData[cardDataIndex] && flashcardsData[cardDataIndex].char) { 
+                const charToSpeak = flashcardsData[cardDataIndex].char;
                 const audioFilePath = `${charToSpeak}.mp3`; // Assuming MP3s are named after the character, e.g., "我.mp3"
                 
                 audioPlayer.src = audioFilePath;
                 audioPlayer.load(); // Load the new audio file
                 audioPlayer.play().catch(error => {
                     console.error("Error playing audio:", error);
-                    // This catch is important for mobile browsers that might block autoplay
-                    alert("Le navigateur a peut-être bloqué la lecture automatique de l'audio. Veuillez interagir manuellement ou vérifier les paramètres de votre navigateur.");
+                    // Minimal alert, hoping the explicit click allows it
+                    alert("Impossible de lire l'audio. Assurez-vous que le fichier MP3 existe et est bien nommé.");
                 });
             } else {
                 console.warn("No character or audio path available for playback.");
             }
         }
-
-        audioButton.addEventListener('click', playAudioForActiveCard);
-        audioButton.addEventListener('touchend', (e) => {
-            e.preventDefault(); 
-            playAudioForActiveCard();
-        });
-
 
         // --- Score Overlay Logic ---
         function updateScoreDisplay() {

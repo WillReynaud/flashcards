@@ -8,6 +8,7 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
+            flex-direction: column; /* Changed to column to stack elements vertically */
             justify-content: center;
             align-items: center;
             min-height: 100vh;
@@ -30,6 +31,7 @@
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
+            margin-bottom: 20px; /* Space between cards and audio button */
         }
 
         .flashcard {
@@ -115,29 +117,35 @@
             color: #000; 
         }
 
-        /* Audio zone positioned specifically for bottom-right corner and invisible */
-        .audio-zone { 
-            position: absolute;
-            bottom: 0px; 
-            right: 0px; /* Position to the right */
-            width: 100px; /* Increased size for easier tapping */
-            height: 100px; /* Increased size for easier tapping */
+        /* NEW: Audio Button Styles */
+        #audio-button {
+            background-color: #007bff;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px; /* Pill shape */
+            font-size: 2em;
             cursor: pointer;
-            z-index: 10; 
-            border-top-left-radius: 15px; /* Rounded top-left corner as it's now bottom-right */
-            box-sizing: border-box;
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+            transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+            outline: none; /* Remove outline on focus */
             display: flex;
             justify-content: center;
             align-items: center;
+            margin-top: 20px; /* Space from the flashcard stack */
         }
 
-        /* Make icon completely transparent */
-        .audio-zone::after {
-            content: '🔊'; 
-            font-size: 2em; 
-            opacity: 0; /* Make it completely invisible */
+        #audio-button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
         }
 
+        #audio-button:active {
+            background-color: #004085;
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
+        }
 
         #feedback {
             position: fixed;
@@ -322,6 +330,8 @@
     <div id="flashcard-stack">
         </div>
 
+    <button id="audio-button">🔊</button>
+
     <audio id="audio-player"></audio>
 
     <div id="home-indicator-bar"></div>
@@ -505,7 +515,8 @@
         const NUM_DISPLAY_STAGES = 4; // Char, Pinyin, Translation, Example
 
         const flashcardStack = document.getElementById('flashcard-stack');
-        const audioPlayer = document.getElementById('audio-player');
+        const audioPlayer = document.getElementById('audio-player'); // Still here if you want to use it for custom audio files later
+        const audioButton = document.getElementById('audio-button'); // NEW: Get the audio button
         const feedbackDisplay = document.getElementById('feedback');
         const scoreOverlay = document.getElementById('score-overlay');
         const homeIndicatorBar = document.getElementById('home-indicator-bar');
@@ -596,9 +607,10 @@
                 flashcardDiv.appendChild(contentDiv);
             });
 
-            const audioZoneDiv = document.createElement('div');
-            audioZoneDiv.classList.add('audio-zone'); 
-            flashcardDiv.appendChild(audioZoneDiv);
+            // REMOVED: Audio zone is no longer part of the card
+            // const audioZoneDiv = document.createElement('div');
+            // audioZoneDiv.classList.add('audio-zone'); 
+            // flashcardDiv.appendChild(audioZoneDiv);
 
             return flashcardDiv;
         }
@@ -730,18 +742,9 @@
 
             removeEventListenersFromActiveCard(); 
 
-            const audioZone = activeCard.querySelector('.audio-zone');
-
-            // --- Common Tap/Click Handler (for the card itself, not audio zone) ---
+            // --- Common Tap/Click Handler (for the card itself) ---
             const handleCardTapOrClick = (e) => {
-                // Check if the event target is inside the audio zone.
-                // If so, we let the audio zone's specific listener handle it and return.
-                if (audioZone && audioZone.contains(e.target)) {
-                    // This event was handled by audioZone's listener, prevent card from advancing stage
-                    return; 
-                }
-
-                // If it's a tap/click and not on the audio zone, rotate the card
+                // If it's a tap/click, rotate the card
                 let currentStage = parseInt(activeCard.dataset.currentDisplayStage || 0);
                 const nextStage = (currentStage + 1) % NUM_DISPLAY_STAGES; 
                 updateDisplayStage(activeCard, nextStage);
@@ -806,7 +809,7 @@
                 } else if (isTap) { 
                     // Apply debounce for mouse clicks too for consistency
                     if (!tapTimeout) {
-                        handleCardTapOrClick(e); // Use the new common handler
+                        handleCardTapOrClick(e); 
                         tapTimeout = setTimeout(() => {
                             tapTimeout = null;
                         }, TAP_DEBOUNCE_DELAY);
@@ -825,8 +828,7 @@
                     startY = e.touches[0].clientY;
                     initialTransform = activeCard.style.transform;
                     activeCard.style.transition = 'none';
-                    // Do NOT preventDefault here, let the audioZone handle its own touchstart/touchend
-                    // unless a significant drag starts.
+                    e.preventDefault(); // Prevent scrolling/zooming immediately on touch
                     document.addEventListener('touchmove', touchmoveHandler, { passive: false });
                     document.addEventListener('touchend', globalTouchendHandler);
                     document.addEventListener('touchcancel', globalTouchendHandler);
@@ -840,10 +842,8 @@
                 const deltaX = e.touches[0].clientX - startX;
                 const deltaY = e.touches[0].clientY - startY;
 
-                // Only prevent default if a significant movement (not just a tap) is detected
                 if (Math.abs(deltaX) > tapThreshold || Math.abs(deltaY) > tapThreshold) {
                     isTap = false;
-                    e.preventDefault(); // Prevent scrolling/zooming on drag
                 }
 
                 const rotation = deltaX / (window.innerWidth / 2) * 20;
@@ -876,7 +876,7 @@
                     swipeCard(direction);
                 } else if (isTap) { 
                     if (!tapTimeout) {
-                        handleCardTapOrClick(e); // Use the new common handler
+                        handleCardTapOrClick(e); 
                         tapTimeout = setTimeout(() => {
                             tapTimeout = null;
                         }, TAP_DEBOUNCE_DELAY);
@@ -885,47 +885,13 @@
                     activeCard.style.transform = initialTransform;
                 }
             };
-            
-            // --- Audio Zone Specific Listeners ---
-            const playAudio = () => {
-                const currentCardDataIndex = parseInt(activeCard.dataset.cardDataIndex);
-                if (!isNaN(currentCardDataIndex) && flashcardsData[currentCardDataIndex] && flashcardsData[currentCardDataIndex].char) { 
-                    const charToSpeak = flashcardsData[currentCardDataIndex].char;
-                    const utterance = new SpeechSynthesisUtterance(charToSpeak);
-                    utterance.lang = 'zh-CN'; // Set language to Chinese
-                    speechSynthesis.speak(utterance);
-                } else {
-                    console.warn("No character available for audio playback.");
-                }
-            };
-
-            if (audioZone) {
-                // On mobile, touchend is usually preferred over click for responsiveness
-                // We ensure it only plays audio and does not affect the card stage
-                const audioZoneTouchendHandler = (e) => {
-                    e.stopPropagation(); // Stop event from bubbling up to the card
-                    e.preventDefault(); // Prevent phantom click if it's the end of a touch
-                    playAudio();
-                };
-                audioZone.addEventListener('touchend', audioZoneTouchendHandler);
-                currentCardListeners.audioZoneTouchend = audioZoneTouchendHandler;
-
-                // Also add a click listener for desktop/mouse users, making sure it also stops propagation
-                const audioZoneClickHandler = (e) => {
-                    e.stopPropagation(); 
-                    e.preventDefault(); // Prevent default click on the element
-                    playAudio();
-                };
-                audioZone.addEventListener('click', audioZoneClickHandler);
-                currentCardListeners.audioZoneClick = audioZoneClickHandler;
-            }
         }
 
         function removeEventListenersFromActiveCard() {
             const activeCard = flashcardStack.querySelector('.flashcard.active');
             if (!activeCard) return;
 
-            // Remove previous listeners for card interactions
+            // Remove all previously added listeners for card interactions
             if (currentCardListeners.mousedown) activeCard.removeEventListener('mousedown', currentCardListeners.mousedown);
             document.removeEventListener('mousemove', currentCardListeners.mousemoveHandler); 
             document.removeEventListener('mouseup', currentCardListeners.globalMouseupHandler);
@@ -935,20 +901,35 @@
             document.removeEventListener('touchend', currentCardListeners.globalTouchendHandler);
             document.removeEventListener('touchcancel', currentCardListeners.globalTouchendHandler);
 
-            // Remove specific audio zone listeners
-            const audioZone = activeCard.querySelector('.audio-zone');
-            if (audioZone) {
-                if (currentCardListeners.audioZoneTouchend) {
-                    audioZone.removeEventListener('touchend', currentCardListeners.audioZoneTouchend);
-                }
-                if (currentCardListeners.audioZoneClick) {
-                    audioZone.removeEventListener('click', currentCardListeners.audioZoneClick);
-                }
-            }
-
             currentCardListeners = {}; // Clear the stored listeners
         }
         
+        // --- NEW: Global Audio Play Function ---
+        function playAudioForActiveCard() {
+            const activeCard = flashcardStack.querySelector('.flashcard.active');
+            if (!activeCard) {
+                console.warn("No active card to play audio for.");
+                return;
+            }
+            const currentCardDataIndex = parseInt(activeCard.dataset.cardDataIndex);
+            if (!isNaN(currentCardDataIndex) && flashcardsData[currentCardDataIndex] && flashcardsData[currentCardDataIndex].char) { 
+                const charToSpeak = flashcardsData[currentCardDataIndex].char;
+                const utterance = new SpeechSynthesisUtterance(charToSpeak);
+                utterance.lang = 'zh-CN'; // Set language to Chinese
+                speechSynthesis.speak(utterance);
+            } else {
+                console.warn("No character available for audio playback.");
+            }
+        }
+
+        // --- NEW: Audio Button Event Listeners ---
+        audioButton.addEventListener('click', playAudioForActiveCard);
+        audioButton.addEventListener('touchend', (e) => {
+            e.preventDefault(); // Prevent potential phantom clicks
+            playAudioForActiveCard();
+        });
+
+
         // --- Score Overlay Logic ---
         function updateScoreDisplay() {
             const notMasteredColumn = document.querySelector('.score-column.not-mastered');

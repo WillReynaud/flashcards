@@ -433,7 +433,7 @@
             { char: "半", pinyin: "bàn", translation: "demi (30 minutes)", example: "三点半 (Sān diǎn bàn) - Trois heures et demie." },
             { char: "三点钟", pinyin: "sān diǎn zhōng", translation: "3 heures", example: "火车三点钟开 (Huǒchē sān diǎn zhōng kāi) - Le train part à trois heures." },
             { char: "三点五分", pinyin: "sān diǎn wǔ fēn", translation: "3h05", example: "会议三点五分开始 (Huìyì sān diǎn wǔ fēn kāishǐ) - La réunion commence à 3h05." },
-            { char: "六点一刻", pinyin: "liù diǎn yī kè", translation: "6h15", example: "我们六点一刻见面 (Wǒmen liù diǎn yī kè jiànmiàn) - On se voit à 6h15." },
+            { char: "六点一刻", pinyin: "liù diǎn yī kè", translation: "6h15", example: "Nous six heures et un quart se rencontrent." },
             { char: "六点半", pinyin: "liù diǎn bàn", translation: "6h30", example: "Elle six heures et demie rentre à la maison." },
             { char: "七点差一刻", pinyin: "qī diǎn chà yī kè", translation: "6h45", example: "Maintenant, il est sept heures moins le quart." },
             { char: "六点三刻", pinyin: "liù diǎn sān kè", translation: "6h45 (alternative)", example: "Il arrive à six heures trois quarts." },
@@ -732,6 +732,22 @@
 
             const audioZone = activeCard.querySelector('.audio-zone');
 
+            // --- Common Tap/Click Handler (for the card itself, not audio zone) ---
+            const handleCardTapOrClick = (e) => {
+                // Check if the event target is inside the audio zone.
+                // If so, we let the audio zone's specific listener handle it and return.
+                if (audioZone && audioZone.contains(e.target)) {
+                    // This event was handled by audioZone's listener, prevent card from advancing stage
+                    return; 
+                }
+
+                // If it's a tap/click and not on the audio zone, rotate the card
+                let currentStage = parseInt(activeCard.dataset.currentDisplayStage || 0);
+                const nextStage = (currentStage + 1) % NUM_DISPLAY_STAGES; 
+                updateDisplayStage(activeCard, nextStage);
+            };
+
+
             // --- Mouse Events ---
             const mousedownHandler = (e) => {
                 if (e.button === 0) { 
@@ -742,7 +758,7 @@
                     initialTransform = activeCard.style.transform; 
                     activeCard.style.transition = 'none'; 
                     activeCard.style.cursor = 'grabbing';
-                    e.preventDefault(); 
+                    e.preventDefault(); // Prevent default browser drag behavior
                     document.addEventListener('mousemove', mousemoveHandler);
                     document.addEventListener('mouseup', globalMouseupHandler);
                 }
@@ -770,7 +786,6 @@
                     activeCard.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
                 }
             };
-            // Event listener is added on mousedown and removed on mouseup
 
             const globalMouseupHandler = (e) => { 
                 if (!isDragging) return;
@@ -789,8 +804,9 @@
                     const direction = deltaX > 0 ? 'right' : 'left';
                     swipeCard(direction);
                 } else if (isTap) { 
+                    // Apply debounce for mouse clicks too for consistency
                     if (!tapTimeout) {
-                        handleCardInteraction(e);
+                        handleCardTapOrClick(e); // Use the new common handler
                         tapTimeout = setTimeout(() => {
                             tapTimeout = null;
                         }, TAP_DEBOUNCE_DELAY);
@@ -809,6 +825,8 @@
                     startY = e.touches[0].clientY;
                     initialTransform = activeCard.style.transform;
                     activeCard.style.transition = 'none';
+                    // Do NOT preventDefault here, let the audioZone handle its own touchstart/touchend
+                    // unless a significant drag starts.
                     document.addEventListener('touchmove', touchmoveHandler, { passive: false });
                     document.addEventListener('touchend', globalTouchendHandler);
                     document.addEventListener('touchcancel', globalTouchendHandler);
@@ -825,7 +843,7 @@
                 // Only prevent default if a significant movement (not just a tap) is detected
                 if (Math.abs(deltaX) > tapThreshold || Math.abs(deltaY) > tapThreshold) {
                     isTap = false;
-                    e.preventDefault(); 
+                    e.preventDefault(); // Prevent scrolling/zooming on drag
                 }
 
                 const rotation = deltaX / (window.innerWidth / 2) * 20;
@@ -858,7 +876,7 @@
                     swipeCard(direction);
                 } else if (isTap) { 
                     if (!tapTimeout) {
-                        handleCardInteraction(e);
+                        handleCardTapOrClick(e); // Use the new common handler
                         tapTimeout = setTimeout(() => {
                             tapTimeout = null;
                         }, TAP_DEBOUNCE_DELAY);
@@ -868,55 +886,46 @@
                 }
             };
             
-            // Re-adding a more specific click handler for the audio zone only
-            // This prevents the "phantom click" from affecting the whole card
-            // but allows the audio zone to work.
-            const audioZoneClickHandler = (e) => {
-                e.preventDefault(); // Prevent default click action (like phantom click)
-                e.stopPropagation(); // Stop propagation to the card itself
-
+            // --- Audio Zone Specific Listeners ---
+            const playAudio = () => {
                 const currentCardDataIndex = parseInt(activeCard.dataset.cardDataIndex);
-                if (!isNaN(currentCardDataIndex) && flashcardsData[currentCardDataIndex]) {
-                    if (flashcardsData[currentCardDataIndex].char) { 
-                        const charToSpeak = flashcardsData[currentCardDataIndex].char;
-                        const utterance = new SpeechSynthesisUtterance(charToSpeak);
-                        utterance.lang = 'zh-CN'; // Set language to Chinese
-                        speechSynthesis.speak(utterance);
-                    } else {
-                        console.warn("No character available for audio playback.");
-                    }
+                if (!isNaN(currentCardDataIndex) && flashcardsData[currentCardDataIndex] && flashcardsData[currentCardDataIndex].char) { 
+                    const charToSpeak = flashcardsData[currentCardDataIndex].char;
+                    const utterance = new SpeechSynthesisUtterance(charToSpeak);
+                    utterance.lang = 'zh-CN'; // Set language to Chinese
+                    speechSynthesis.speak(utterance);
+                } else {
+                    console.warn("No character available for audio playback.");
                 }
             };
 
-            // Add listener directly to the audio zone
             if (audioZone) {
+                // On mobile, touchend is usually preferred over click for responsiveness
+                // We ensure it only plays audio and does not affect the card stage
+                const audioZoneTouchendHandler = (e) => {
+                    e.stopPropagation(); // Stop event from bubbling up to the card
+                    e.preventDefault(); // Prevent phantom click if it's the end of a touch
+                    playAudio();
+                };
+                audioZone.addEventListener('touchend', audioZoneTouchendHandler);
+                currentCardListeners.audioZoneTouchend = audioZoneTouchendHandler;
+
+                // Also add a click listener for desktop/mouse users, making sure it also stops propagation
+                const audioZoneClickHandler = (e) => {
+                    e.stopPropagation(); 
+                    e.preventDefault(); // Prevent default click on the element
+                    playAudio();
+                };
                 audioZone.addEventListener('click', audioZoneClickHandler);
                 currentCardListeners.audioZoneClick = audioZoneClickHandler;
             }
-
-
-            const handleCardInteraction = (e) => {
-                // Check if the interaction originated from within the audio zone
-                // We've moved the audio playback logic to audioZoneClickHandler
-                // so this check is primarily to prevent card stage change if audio zone was targeted.
-                const audioZone = activeCard.querySelector('.audio-zone');
-                if (audioZone && audioZone.contains(e.target)) {
-                    e.stopPropagation(); // Ensure click on audio zone doesn't bubble up to card logic
-                    return; 
-                }
-                
-                // If it's a tap/click and not on the audio zone, rotate the card
-                let currentStage = parseInt(activeCard.dataset.currentDisplayStage || 0);
-                const nextStage = (currentStage + 1) % NUM_DISPLAY_STAGES; 
-                updateDisplayStage(activeCard, nextStage);
-            };
         }
 
         function removeEventListenersFromActiveCard() {
             const activeCard = flashcardStack.querySelector('.flashcard.active');
             if (!activeCard) return;
 
-            // Remove previous listeners
+            // Remove previous listeners for card interactions
             if (currentCardListeners.mousedown) activeCard.removeEventListener('mousedown', currentCardListeners.mousedown);
             document.removeEventListener('mousemove', currentCardListeners.mousemoveHandler); 
             document.removeEventListener('mouseup', currentCardListeners.globalMouseupHandler);
@@ -926,18 +935,20 @@
             document.removeEventListener('touchend', currentCardListeners.globalTouchendHandler);
             document.removeEventListener('touchcancel', currentCardListeners.globalTouchendHandler);
 
+            // Remove specific audio zone listeners
             const audioZone = activeCard.querySelector('.audio-zone');
-            if (audioZone && currentCardListeners.audioZoneClick) {
-                audioZone.removeEventListener('click', currentCardListeners.audioZoneClick);
+            if (audioZone) {
+                if (currentCardListeners.audioZoneTouchend) {
+                    audioZone.removeEventListener('touchend', currentCardListeners.audioZoneTouchend);
+                }
+                if (currentCardListeners.audioZoneClick) {
+                    audioZone.removeEventListener('click', currentCardListeners.audioZoneClick);
+                }
             }
 
             currentCardListeners = {}; // Clear the stored listeners
         }
         
-        // Removed `playAudio` as we're directly using Web Speech API for simplicity
-        // If you still want local audio files, you'll need to re-implement `playAudio`
-        // and ensure the `audios` directory exists with correctly named MP3s.
-
         // --- Score Overlay Logic ---
         function updateScoreDisplay() {
             const notMasteredColumn = document.querySelector('.score-column.not-mastered');

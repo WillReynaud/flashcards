@@ -90,15 +90,15 @@
             font-weight: bold;
         }
 
-        .flashcard-middle h2 {
+        .flashcard-middle h2 { /* Pinyin */
             font-size: clamp(2em, 5vw, 3em); /* Adjusted min size */
         }
 
-        .flashcard-back h2 {
+        .flashcard-back h2 { /* Translation */
             font-size: clamp(1.8em, 4vw, 2.5em); /* Adjusted min size */
         }
         
-        .flashcard-example h2 {
+        .flashcard-example h2 { /* Example */
             font-size: clamp(1.2em, 3vw, 1.8em); /* Adjusted min size */
             padding: 10px;
             line-height: 1.5;
@@ -115,27 +115,27 @@
             color: #000; 
         }
 
-        /* Audio zone positioned specifically for better mobile tap */
+        /* Audio zone positioned specifically for bottom-right corner and invisible */
         .audio-zone { 
             position: absolute;
             bottom: 0px; 
-            left: 0px; 
-            width: 100px; 
-            height: 100px; 
+            right: 0px; /* Position to the right */
+            width: 100px; /* Increased size for easier tapping */
+            height: 100px; /* Increased size for easier tapping */
             cursor: pointer;
             z-index: 10; 
-            border-top-right-radius: 15px; 
+            border-top-left-radius: 15px; /* Rounded top-left corner as it's now bottom-right */
             box-sizing: border-box;
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
-        /* Make icon transparent */
+        /* Make icon completely transparent */
         .audio-zone::after {
             content: '🔊'; 
             font-size: 2em; 
-            color: rgba(0,0,0,0); /* Set color to transparent */
+            opacity: 0; /* Make it completely invisible */
         }
 
 
@@ -358,7 +358,7 @@
             { char: "叫", pinyin: "jiào", translation: "s'appeler (prénom)", example: "我叫王明 (Wǒ jiào Wáng Míng) - Je m'appelle Wang Ming." },
             { char: "学", pinyin: "xué", translation: "étudier", example: "我学汉语 (Wǒ xué hànyǔ) - J'étudie le chinois." },
             { char: "是", pinyin: "shì", translation: "être", example: "我是法国人 (Wǒ shì Fàguó rén) - Je suis français." },
-            { char: "生", pinyin: "shēng", translation: "naître / élève", example: "我的生日是今天 (Wǒ de shēngrì shì jīntiān) - Mon anniversaire est aujourd'hui." },
+            { char: "生", pinyin: "shēng", translation: "naître / élève", example: "我的生日是今天 (Wǒ de shēngrì shì jīn tiān) - Mon anniversaire est aujourd'hui." },
             { char: "有", pinyin: "yǒu", translation: "avoir", example: "我有一个苹果 (Wǒ yǒu yīgè píngguǒ) - J'ai une pomme." },
             { char: "说", pinyin: "shuō", translation: "dire / parler", example: "你会说汉语吗？ (Nǐ huì shuō hànyǔ ma?) - Sais-tu parler chinois ?" },
             { char: "在", pinyin: "zài", translation: "être (quelque part)", example: "我在家 (Wǒ zài jiā) - Je suis à la maison." },
@@ -420,7 +420,7 @@
             { char: "昨天", pinyin: "zuótiānhier", translation: "hier", example: "昨天我没去 (Zuótiān wǒ méi qù) - Je n'y suis pas allé hier." },
             { char: "上午", pinyin: "shàngwǔ", translation: "matin", example: "上午好 (Shàngwǔ hǎo) - Bonjour (matin)." },
             { char: "中午", pinyin: "zhōngwǔ", translation: "midi", example: "中午吃饭 (Zhōngwǔ chīfàn) - Manger à midi." },
-            { char: "下午", pinyin: "xiàwǔ", translation: "après-midi", example: "下午去公园 (Xiàwǔ qù gōngyuán) - Aller au parc l'après-midi." },
+            { char: "下午", pinyin: "xiàwǔ", translation: "xiàwǔ", example: "下午去公园 (Xiàwǔ qù gōngyuán) - Aller au parc l'après-midi." },
             { char: "早上", pinyin: "zǎoshang", translation: "matin (très tôt)", example: "早上好 (Zǎoshang hǎo) - Bonjour (très tôt le matin)." },
             { char: "晚上", pinyin: "wǎnshang", translation: "soir", example: "晚上好 (Wǎnshang hǎo) - Bonsoir." },
             { char: "今年", pinyin: "jīnnián", translation: "cette année", example: "我今年三十岁 (Wǒ jīnnián sānshí suì) - J'ai trente ans cette année." },
@@ -449,8 +449,8 @@
             { char: "那个人", pinyin: "nà ge rén", translation: "cette personne-là", example: "那个人是我的老师 (Nàgè rén shì wǒ de lǎoshī) - Cette personne-là est mon professeur." },
             { char: "都", pinyin: "dōu", translation: "tous / tout", example: "我们都是学生 (Wǒmen dōu shì xuéshēng) - Nous sommes tous étudiants." },
             { char: "朋友", pinyin: "péngyǒu", translation: "ami", example: "他是我的好朋友 (Tā shì wǒ de hǎo péngyǒu) - C'est mon bon ami." },
-            { char: "男朋友", pinyin: "nán péngyǒu", translation: "petit ami", example: "她有男朋友 (Tā yǒu nán péngyǒu) - Elle a un petit ami." },
-            { char: "女朋友", pinyin: "nǚ péngyǒu", translation: "petite amie", example: "他有女朋友 (Tā yǒu nǚ péngyǒu) - Il a une petite amie." },
+            { char: "男朋友", pinyin: "nán péngyǒu", translation: "petit ami", example: "elle a un petit ami" },
+            { char: "女朋友", pinyin: "nǚ péngyǒu", translation: "petite amie", example: "il a une petite amie" },
             { char: "姐姐", pinyin: "jiějie", translation: "grande sœur", example: "我有一个姐姐 (Wǒ yǒu yīgè jiějie) - J'ai une grande sœur." },
             { char: "妹妹", pinyin: "mèimei", translation: "petite sœur", example: "我的妹妹很可爱 (Wǒ de mèimei hěn kě'ài) - Ma petite sœur est très mignonne." },
             { char: "哥哥", pinyin: "gēge", translation: "grand frère", example: "我没有哥哥 (Wǒ méiyǒu gēge) - Je n'ai pas de grand frère." },
@@ -462,36 +462,36 @@
             { char: "学生", pinyin: "xuéshēng", translation: "étudiant", example: "他是一名学生 (Tā shì yī míng xuéshēng) - C'est un étudiant." },
             { char: "大学生", pinyin: "dàxuéshēng", translation: "étudiant (supérieur)", example: "他是一个大学生 (Tā shì yīgè dàxuéshēng) - C'est un étudiant universitaire." },
             { char: "中学生", pinyin: "zhōngxuéshēng", translation: "élève du secondaire", example: "我的表弟是中学生 (Wǒ de biǎodì shì zhōngxuéshēng) - Mon cousin est élève au collège/lycée." },
-            { char: "小学生", pinyin: "xiǎoxuéshēng", translation: "élève du primaire", example: "她是一个小学生 (Tā shì yīgè xiǎoxuéshēng) - C'est une élève de primaire." },
-            { char: "博士", pinyin: "bóshì", translation: "docteur (titre académique)", example: "他是博士 (Tā shì bóshì) - Il est docteur (PhD)." },
-            { char: "汉语", pinyin: "hànyǔ", translation: "langue chinoise", example: "我学汉语 (Wǒ xué hànyǔ) - J'apprends le chinois." },
-            { char: "日语", pinyin: "rìyǔ", translation: "langue japonaise", example: "你会说日语吗？ (Nǐ huì shuō rìyǔ ma?) - Parles-tu japonais ?" },
-            { char: "法语", pinyin: "fǎyǔ", translation: "langue française", example: "我来自法国，所以我说法语 (Wǒ láizì Fàguó, suǒyǐ wǒ shuō fǎyǔ) - Je viens de France, donc je parle français." },
-            { char: "英语", pinyin: "yīngyǔ", translation: "langue anglaise", example: "他英语很好 (Tā yīngyǔ hěn hǎo) - Son anglais est très bon." },
-            { char: "德语", pinyin: "déyǔ", translation: "langue allemande", example: "我不会说德语 (Wǒ bù huì shuō déyǔ) - Je ne parle pas allemand." },
+            { char: "小学生", pinyin: "xiǎoxuéshēng", translation: "élève du primaire", example: "elle est une élève de primaire" },
+            { char: "博士", pinyin: "bóshì", translation: "docteur (titre académique)", example: "il est docteur (PhD)" },
+            { char: "汉语", pinyin: "hànyǔ", translation: "langue chinoise", example: "j'apprends le chinois" },
+            { char: "日语", pinyin: "rìyǔ", translation: "langue japonaise", example: "Parles-tu japonais ?" },
+            { char: "法语", pinyin: "fǎyǔ", translation: "langue française", example: "Je viens de France, donc je parle français." },
+            { char: "英语", pinyin: "yīngyǔ", translation: "langue anglaise", example: "Son anglais est très bon." },
+            { char: "德语", pinyin: "déyǔ", translation: "langue allemande", example: "Je ne parle pas allemand." },
             { char: "文", pinyin: "wén", translation: "écriture / langue", example: "中文 (Zhōngwén) - Langue chinoise (écrite)." },
-            { char: "历史", pinyin: "lìshǐ", translation: "histoire", example: "我喜欢历史 (Wǒ xǐhuān lìshǐ) - J'aime l'histoire." },
-            { char: "艺术", pinyin: "yìshù", translation: "art", example: "她学习艺术 (Tā xuéxí yìshù) - Elle étudie l'art." },
-            { char: "文学", pinyin: "wénxué", translation: "littérature", example: "他对文学很感兴趣 (Tā duì wénxué hěn gǎn xìngqù) - Il est très intéressé par la littérature." },
-            { char: "数学", pinyin: "shùxué", translation: "mathématiques", example: "数学很难 (Shùxué hěn nán) - Les mathématiques sont difficiles." },
-            { char: "中国", pinyin: "zhōngguó", translation: "Chine", example: "我爱中国 (Wǒ ài Zhōngguó) - J'aime la Chine." },
-            { char: "北京", pinyin: "běijīng", translation: "Pékin", example: "我去过北京 (Wǒ qùguò Běijīng) - Je suis allé à Pékin." },
-            { char: "法国", pinyin: "fǎguó", translation: "France", example: "我是法国人 (Wǒ shì Fàguó rén) - Je suis français." },
-            { char: "车", pinyin: "chē", translation: "véhicule", example: "这辆车很漂亮 (Zhè liàng chē hěn piàoliang) - Cette voiture est très belle." },
-            { char: "汽车", pinyin: "qìchē", translation: "voiture", example: "他有一辆汽车 (Tā yǒu yī liàng qìchē) - Il a une voiture." },
-            { char: "自行车", pinyin: "zìxíngchē", translation: "vélo", example: "我骑自行车去上班 (Wǒ qí zìxíngchē qù shàngbān) - Je vais au travail à vélo." },
-            { char: "国", pinyin: "guó", translation: "pays", example: "你的国家是哪里？ (Nǐ de guójiā shì nǎlǐ?) - Quel est ton pays ?" },
-            { char: "人口", pinyin: "rénkǒupopulation", translation: "population", example: "中国人口很多 (Zhōngguó rénkǒu hěn duō) - La population chinoise est très nombreuse." },
-            { char: "北方人", pinyin: "běifāngréngens", translation: "gens du nord", example: "我是北方人 (Wǒ shì běifāng rén) - Je suis du nord (de la Chine)." },
-            { char: "南方人", pinyin: "nánfāngréngens", translation: "gens du sud", example: "他是南方人 (Tā shì nánfāng rén) - Il est du sud (de la Chine)." },
+            { char: "历史", pinyin: "lìshǐ", translation: "histoire", example: "J'aime l'histoire." },
+            { char: "艺术", pinyin: "yìshù", translation: "art", example: "Elle étudie l'art." },
+            { char: "文学", pinyin: "wénxué", translation: "littérature", example: "Il est très intéressé par la littérature." },
+            { char: "数学", pinyin: "shùxué", translation: "mathématiques", example: "Les mathématiques sont difficiles." },
+            { char: "中国", pinyin: "zhōngguó", translation: "Chine", example: "J'aime la Chine." },
+            { char: "北京", pinyin: "běijīng", translation: "Pékin", example: "Je suis allé à Pékin." },
+            { char: "法国", pinyin: "fǎguó", translation: "France", example: "Je suis français." },
+            { char: "车", pinyin: "chē", translation: "véhicule", example: "Cette voiture est très belle." },
+            { char: "汽车", pinyin: "qìchē", translation: "voiture", example: "Il a une voiture." },
+            { char: "自行车", pinyin: "zìxíngchē", translation: "vélo", example: "Je vais au travail à vélo." },
+            { char: "国", pinyin: "guó", translation: "pays", example: "Quel est ton pays ?" },
+            { char: "人口", pinyin: "rénkǒu", translation: "population", example: "La population chinoise est très nombreuse." },
+            { char: "北方人", pinyin: "běifāngrén", translation: "gens du nord", example: "Je suis du nord (de la Chine)." },
+            { char: "南方人", pinyin: "nánfāngrén", translation: "gens du sud", example: "Il est du sud (de la Chine)." },
             { char: "中", pinyin: "zhōng", translation: "au centre / milieu", example: "中间 (Zhōngjiān) - Au milieu." },
-            { char: "北", pinyin: "běi", translation: "nord", example: "北京在北方 (Běijīng zài běifāng) - Pékin est au nord." },
-            { char: "南", pinyin: "nán", translation: "sud", example: "南方很热 (Nánfāng hěn rè) - Le sud est très chaud." },
+            { char: "北", pinyin: "běi", translation: "nord", example: "Pékin est au nord." },
+            { char: "南", pinyin: "nán", translation: "sud", example: "Le sud est très chaud." },
             { char: "东", pinyin: "dōng", translation: "est", example: "东方 (Dōngfāng) - L'Est." },
             { char: "西", pinyin: "xī", translation: "ouest", example: "西方文化 (Xīfāng wénhuà) - Culture occidentale." },
-            { char: "茶", pinyin: "chá", translation: "thé", example: "请喝茶 (Qǐng hē chá) - S'il vous plaît, buvez du thé." },
-            { char: "是", pinyin: "shì", translation: "Oui", example: "是的 (Shì de) - Oui, c'est ça." },
-            { char: "不", pinyin: "bù", translation: "non", example: "不对 (Bù duì) - Non, ce n'est pas juste." },
+            { char: "茶", pinyin: "chá", translation: "thé", example: "S'il vous plaît, buvez du thé." },
+            { char: "是", pinyin: "shì", translation: "Oui", example: "Oui, c'est ça." },
+            { char: "不", pinyin: "bù", translation: "non", example: "Non, ce n'est pas juste." },
             { char: "红", pinyin: "hóng", translation: "rouge", example: "红色 (Hóngsè) - Couleur rouge." },
             { char: "绿", pinyin: "lü", translation: "Vert", example: "绿色 (Lǜsè) - Couleur verte." },
             { char: "奶", pinyin: "nǎi", translation: "lait", example: "牛奶 (Niúnǎi) - Lait de vache." }
@@ -582,7 +582,7 @@
             const cardValues = [
                 flashcardsData[cardDataIndex].char,
                 flashcardsData[cardDataIndex].pinyin,
-                flashcardsData[cardDataIndex].translation,
+                flashcardsData[cardDataIndex].actualTranslation || flashcardsData[cardDataIndex].translation, // Use actualTranslation if available
                 flashcardsData[cardDataIndex].example 
             ];
 
@@ -688,7 +688,7 @@
                 if (i === 0) {
                     cards[i].style.transform = 'translateY(0) scale(1)'; 
                     cards[i].classList.add('active');
-                    updateDisplayStage(cards[i], 0); 
+                    updateDisplayStage(cards[i], 0); // Always reset to stage 0 for new active card
                 } else if (i === 1) {
                     cards[i].style.transform = 'translateY(calc(10px + 1vw)) scale(0.95)';
                 } else if (i === 2) {
@@ -862,8 +862,11 @@
                     const currentCardDataIndex = parseInt(activeCard.dataset.cardDataIndex);
                     if (!isNaN(currentCardDataIndex) && flashcardsData[currentCardDataIndex]) {
                          if (flashcardsData[currentCardDataIndex].char) { 
-                             audioPlayer.src = `audios/${flashcardsData[currentCardDataIndex].char}.mp3`;
-                             playAudio();
+                             // Using Text-to-Speech directly if no audio file exists
+                             const charToSpeak = flashcardsData[currentCardDataIndex].char;
+                             const utterance = new SpeechSynthesisUtterance(charToSpeak);
+                             utterance.lang = 'zh-CN'; // Set language to Chinese
+                             speechSynthesis.speak(utterance);
                          } else {
                              console.warn("No character available for audio playback.");
                          }
@@ -880,26 +883,24 @@
 
         function removeEventListenersFromActiveCard() {
             if (currentCardListeners.mousedown) {
-                flashcardStack.removeEventListener('mousedown', currentCardListeners.mousedown);
-                document.removeEventListener('mousemove', currentCardListeners.mousemoveHandler); // Make sure these are removed
+                const activeCard = flashcardStack.querySelector('.flashcard.active');
+                if (activeCard) activeCard.removeEventListener('mousedown', currentCardListeners.mousedown);
+                document.removeEventListener('mousemove', currentCardListeners.mousemoveHandler); 
                 document.removeEventListener('mouseup', currentCardListeners.globalMouseupHandler);
             }
             if (currentCardListeners.touchstart) {
-                flashcardStack.removeEventListener('touchstart', currentCardListeners.touchstart);
-                document.removeEventListener('touchmove', currentCardListeners.touchmoveHandler); // Make sure these are removed
+                const activeCard = flashcardStack.querySelector('.flashcard.active');
+                if (activeCard) activeCard.removeEventListener('touchstart', currentCardListeners.touchstart);
+                document.removeEventListener('touchmove', currentCardListeners.touchmoveHandler); 
                 document.removeEventListener('touchend', currentCardListeners.globalTouchendHandler);
                 document.removeEventListener('touchcancel', currentCardListeners.globalTouchendHandler);
             }
             currentCardListeners = {}; // Clear the stored listeners
         }
         
-        function playAudio() {
-            if (!audioPlayer.paused) {
-                audioPlayer.pause();
-                audioPlayer.currentTime = 0;
-            }
-            audioPlayer.play().catch(e => console.error("Error playing audio:", e));
-        }
+        // Removed `playAudio` as we're directly using Web Speech API for simplicity
+        // If you still want local audio files, you'll need to re-implement `playAudio`
+        // and ensure the `audios` directory exists with correctly named MP3s.
 
         // --- Score Overlay Logic ---
         function updateScoreDisplay() {

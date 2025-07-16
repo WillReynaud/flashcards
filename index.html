@@ -455,7 +455,7 @@
             { char: "妹妹", pinyin: "mèimei", translation: "petite sœur", example: "我的妹妹很可爱 (Wǒ de mèimei hěn kě'ài) - Ma petite sœur est très mignonne." },
             { char: "哥哥", pinyin: "gēge", translation: "grand frère", example: "我没有哥哥 (Wǒ méiyǒu gēge) - Je n'ai pas de grand frère." },
             { char: "弟弟", pinyin: "dìdi", translation: "petit frère", example: "他是我弟弟 (Tā shì wǒ dìdi) - C'est mon petit frère." },
-            { char: "爸爸", pinyin: "bàba", translation: "papa", example: "我爱爸爸妈妈 (Wǒ ài bàba māmā) - J'aime papa et maman." },
+            { char: "爸爸", pinyin: "bàba", translation: "papa", example: "我爱爸爸妈妈 (Wǒ ài bàba māmā) - J'aime papa et maman." thoại (Wǒmen ài bàba māmā) - We love dad and mom." },
             { char: "妈妈", pinyin: "māmā", translation: "maman", example: "我妈妈在家 (Wǒ māma zài jiā) - Ma maman est à la maison." },
             { char: "孩子", pinyin: "háizi", translation: "enfant", example: "她有两个孩子 (Tā yǒu liǎng gè háizi) - Elle a deux enfants." },
             { char: "父母", pinyin: "fùmǔ", translation: "parents", example: "我的父母是中国人 (Wǒ de fùmǔ shì zhōngguó rén) - Mes parents sont chinois." },
@@ -480,7 +480,7 @@
             { char: "车", pinyin: "chē", translation: "véhicule", example: "这辆车很漂亮 (Zhè liàng chē hěn piàoliang) - Cette voiture est très belle." },
             { char: "汽车", pinyin: "qìchē", translation: "voiture", example: "他有一辆汽车 (Tā yǒu yī liàng qìchē) - Il a une voiture." },
             { char: "自行车", pinyin: "zìxíngchē", translation: "vélo", example: "我骑自行车去上班 (Wǒ qí zìxíngchē qù shàngbān) - Je vais au travail à vélo." },
-            { char: "国", pinyin: "guó", translation: "pays", example: "你的国家是哪里？ (Nǐ de guójiā shì nǎlǐ?) - Quel est ton pays ?" },
+            { char: "国", pinyin: "guó", example: "你的国家是哪里？ (Nǐ de guójiā shì nǎlǐ?) - Quel est ton pays ?" },
             { char: "人口", pinyin: "rénkǒupopulation", translation: "population", example: "中国人口很多 (Zhōngguó rénkǒu hěn duō) - La population chinoise est très nombreuse." },
             { char: "北方人", pinyin: "běifāngréngens", translation: "gens du nord", example: "我是北方人 (Wǒ shì běifāng rén) - Je suis du nord (de la Chine)." },
             { char: "南方人", pinyin: "nánfāngréngens", translation: "gens du sud", example: "他是南方人 (Tā shì nánfāng rén) - Il est du sud (de la Chine)." },
@@ -512,6 +512,10 @@
         const resetButton = document.getElementById('reset-button');
         
         let cardDataQueue = []; 
+
+        // Variable pour dédoublonner les événements tactiles/clics
+        let lastTouchTimestamp = 0;
+        const TOUCH_CLICK_DELAY = 300; // Délai en ms pour considérer un clic après un toucher
 
         function showFeedback(message, type) {
             feedbackDisplay.textContent = message;
@@ -582,7 +586,7 @@
             const cardValues = [
                 flashcardsData[cardDataIndex].char,
                 flashcardsData[cardDataIndex].pinyin,
-                flashcardsData[cardDataIndex].translation,
+                flashcardsData[cardDataIndex].translation, 
                 flashcardsData[cardDataIndex].example 
             ];
 
@@ -596,9 +600,20 @@
                 flashcardDiv.appendChild(contentDiv);
             });
 
-            const audioZoneDiv = document.createElement('div');
-            audioZoneDiv.classList.add('audio-zone'); 
-            flashcardDiv.appendChild(audioZoneDiv);
+            // Audio zone added to the card
+            const audioZone = document.createElement('div');
+            audioZone.classList.add('audio-zone');
+            // The content (speaker icon) is set via CSS ::after pseudo-element to make it transparent
+            audioZone.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent card tap/swipe when clicking the audio zone
+                playAudioForCard(cardDataIndex);
+            });
+            audioZone.addEventListener('touchend', (e) => {
+                e.stopPropagation(); // Prevent card tap/swipe when touching the audio zone
+                e.preventDefault(); // Prevent default touch behavior
+                playAudioForCard(cardDataIndex);
+            });
+            flashcardDiv.appendChild(audioZone);
 
             return flashcardDiv;
         }
@@ -612,12 +627,11 @@
                     flashcardStack.appendChild(cardElement);
                 }
             }
-            // Ensure at least one card is in the stack before trying to set active
             if (flashcardStack.children.length > 0) {
                 flashcardStack.children[0].classList.add('active');
                 updateDisplayStage(flashcardStack.children[0], 0); 
             }
-            applyStackStyles(); // Apply initial stack styles after cards are added
+            applyStackStyles(); 
             addEventListenersToActiveCard();
         }
 
@@ -655,7 +669,6 @@
                 cardDataQueue.shift(); 
                 fillCardQueue(); 
 
-                // Add new card at the end of the visual stack
                 if (cardDataQueue.length > NUM_CARDS_IN_STACK - 1) { 
                     const newCardDataIndex = cardDataQueue[NUM_CARDS_IN_STACK - 1]; 
                     const newCardElement = createFlashcardElement(newCardDataIndex, flashcardStack.children.length); 
@@ -721,16 +734,32 @@
         let initialTransform = '';
         let isTap = true; 
         const tapThreshold = 10; 
-
+        
         function addEventListenersToActiveCard() {
             const activeCard = flashcardStack.querySelector('.flashcard.active');
             if (!activeCard) return;
 
             removeEventListenersFromActiveCard(); 
 
-            // --- Mouse Events ---
+            const handleCardInteraction = (e) => {
+                // Check if the interaction originated from the audio zone
+                if (e.target.classList.contains('audio-zone') || e.target.closest('.audio-zone')) {
+                    return; 
+                }
+
+                // Prevent double-triggering for touch events that also generate clicks
+                if (e.type === 'click' && (Date.now() - lastTouchTimestamp < TOUCH_CLICK_DELAY)) {
+                    return;
+                }
+                
+                let currentStage = parseInt(activeCard.dataset.currentDisplayStage || 0);
+                const nextStage = (currentStage + 1) % NUM_DISPLAY_STAGES; 
+                updateDisplayStage(activeCard, nextStage);
+            };
+
+
             const mousedownHandler = (e) => {
-                if (e.button === 0) { 
+                if (e.button === 0 && !e.target.classList.contains('audio-zone') && !e.target.closest('.audio-zone')) { 
                     isDragging = true;
                     isTap = true; 
                     startX = e.clientX;
@@ -766,7 +795,6 @@
                     activeCard.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
                 }
             };
-            // Event listener is added on mousedown and removed on mouseup
 
             const globalMouseupHandler = (e) => { 
                 if (!isDragging) return;
@@ -785,21 +813,24 @@
                     const direction = deltaX > 0 ? 'right' : 'left';
                     swipeCard(direction);
                 } else if (isTap) { 
-                    handleCardInteraction(e);
+                    handleCardInteraction(e); 
                 } else {
                     activeCard.style.transform = initialTransform; 
                 }
             };
+            activeCard.addEventListener('click', handleCardInteraction); // Keep click for desktop fallback
+            currentCardListeners.click = handleCardInteraction;
 
-            // --- Touch Events ---
+
             const touchstartHandler = (e) => {
-                if (e.touches.length === 1) { 
+                if (e.touches.length === 1 && !e.target.classList.contains('audio-zone') && !e.target.closest('.audio-zone')) { 
                     isDragging = true;
                     isTap = true; 
                     startX = e.touches[0].clientX;
                     startY = e.touches[0].clientY;
                     initialTransform = activeCard.style.transform;
                     activeCard.style.transition = 'none';
+                    e.preventDefault(); 
                     document.addEventListener('touchmove', touchmoveHandler, { passive: false });
                     document.addEventListener('touchend', globalTouchendHandler);
                     document.addEventListener('touchcancel', globalTouchendHandler);
@@ -813,10 +844,8 @@
                 const deltaX = e.touches[0].clientX - startX;
                 const deltaY = e.touches[0].clientY - startY;
 
-                // Only prevent default if a significant movement (not just a tap) is detected
                 if (Math.abs(deltaX) > tapThreshold || Math.abs(deltaY) > tapThreshold) {
                     isTap = false;
-                    e.preventDefault(); 
                 }
 
                 const rotation = deltaX / (window.innerWidth / 2) * 20;
@@ -848,57 +877,50 @@
                     const direction = deltaX > 0 ? 'right' : 'left';
                     swipeCard(direction);
                 } else if (isTap) { 
-                    handleCardInteraction(e);
+                    lastTouchTimestamp = Date.now(); // Enregistre le timestamp du toucher
+                    handleCardInteraction(e); 
                 } else {
                     activeCard.style.transform = initialTransform;
                 }
             };
-
-            const handleCardInteraction = (e) => {
-                const audioZone = activeCard.querySelector('.audio-zone');
-                // Check if the interaction originated from within the audio zone
-                if (audioZone && audioZone.contains(e.target)) {
-                    e.stopPropagation(); 
-                    const currentCardDataIndex = parseInt(activeCard.dataset.cardDataIndex);
-                    if (!isNaN(currentCardDataIndex) && flashcardsData[currentCardDataIndex]) {
-                         if (flashcardsData[currentCardDataIndex].char) { 
-                             audioPlayer.src = `audios/${flashcardsData[currentCardDataIndex].char}.mp3`;
-                             playAudio();
-                         } else {
-                             console.warn("No character available for audio playback.");
-                         }
-                    }
-                    return; // Prevent card rotation if audio zone is clicked/tapped
-                }
-                
-                // If it's a tap/click and not on the audio zone, rotate the card
-                let currentStage = parseInt(activeCard.dataset.currentDisplayStage || 0);
-                const nextStage = (currentStage + 1) % NUM_DISPLAY_STAGES; 
-                updateDisplayStage(activeCard, nextStage);
-            };
         }
 
         function removeEventListenersFromActiveCard() {
-            if (currentCardListeners.mousedown) {
-                flashcardStack.removeEventListener('mousedown', currentCardListeners.mousedown);
-                document.removeEventListener('mousemove', currentCardListeners.mousemoveHandler); // Make sure these are removed
-                document.removeEventListener('mouseup', currentCardListeners.globalMouseupHandler);
-            }
-            if (currentCardListeners.touchstart) {
-                flashcardStack.removeEventListener('touchstart', currentCardListeners.touchstart);
-                document.removeEventListener('touchmove', currentCardListeners.touchmoveHandler); // Make sure these are removed
-                document.removeEventListener('touchend', currentCardListeners.globalTouchendHandler);
-                document.removeEventListener('touchcancel', currentCardListeners.globalTouchendHandler);
-            }
-            currentCardListeners = {}; // Clear the stored listeners
+            const activeCard = flashcardStack.querySelector('.flashcard.active');
+            if (!activeCard) return;
+
+            if (currentCardListeners.mousedown) activeCard.removeEventListener('mousedown', currentCardListeners.mousedown);
+            document.removeEventListener('mousemove', currentCardListeners.mousemoveHandler); 
+            document.removeEventListener('mouseup', currentCardListeners.globalMouseupHandler);
+            
+            if (currentCardListeners.touchstart) activeCard.removeEventListener('touchstart', currentCardListeners.touchstart);
+            document.removeEventListener('touchmove', currentCardListeners.touchmoveHandler); 
+            document.removeEventListener('touchend', currentCardListeners.globalTouchendHandler);
+            document.removeEventListener('touchcancel', currentCardListeners.globalTouchendHandler);
+            
+            // Remove the click listener specifically added for the card body
+            if (currentCardListeners.click) activeCard.removeEventListener('click', currentCardListeners.click);
+
+
+            currentCardListeners = {}; 
         }
         
-        function playAudio() {
-            if (!audioPlayer.paused) {
-                audioPlayer.pause();
-                audioPlayer.currentTime = 0;
+        // --- Audio Play Function (now using local MP3s) ---
+        function playAudioForCard(cardDataIndex) {
+            if (!isNaN(cardDataIndex) && flashcardsData[cardDataIndex] && flashcardsData[cardDataIndex].char) { 
+                const charToSpeak = flashcardsData[cardDataIndex].char;
+                const audioFilePath = `${charToSpeak}.mp3`; // Assuming MP3s are named after the character, e.g., "我.mp3"
+                
+                audioPlayer.src = audioFilePath;
+                audioPlayer.load(); // Load the new audio file
+                audioPlayer.play().catch(error => {
+                    console.error("Error playing audio:", error);
+                    // Minimal alert, hoping the explicit click allows it
+                    // alert("Impossible de lire l'audio. Assurez-vous que le fichier MP3 existe et est bien nommé.");
+                });
+            } else {
+                console.warn("No character or audio path available for playback.");
             }
-            audioPlayer.play().catch(e => console.error("Error playing audio:", e));
         }
 
         // --- Score Overlay Logic ---

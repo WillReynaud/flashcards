@@ -434,7 +434,7 @@
             { char: "三点钟", pinyin: "sān diǎn zhōng", translation: "3 heures", example: "火车三点钟开 (Huǒchē sān diǎn zhōng kāi) - Le train part à trois heures." },
             { char: "三点五分", pinyin: "sān diǎn wǔ fēn", translation: "3h05", example: "会议三点五分开始 (Huìyì sān diǎn wǔ fēn kāishǐ) - La réunion commence à 3h05." },
             { char: "六点一刻", pinyin: "liù diǎn yī kè", translation: "6h15", example: "我们六点一刻见面 (Wǒmen liù diǎn yī kè jiànmiàn) - On se voit à 6h15." },
-            { char: "六点半", pinyin: "liù diǎn bàn", translation: "6h30", example: "她六点半回家 (Tā liù diǎn bàn huí jiā) - Elle rentre à 6h30." },
+            { char: "六点半", pinyin: "liù diǎn bàn", translation: "6h30", example: "Elle six heures et demie rentre à la maison." },
             { char: "七点差一刻", pinyin: "qī diǎn chà yī kè", translation: "6h45", example: "Maintenant, il est sept heures moins le quart." },
             { char: "六点三刻", pinyin: "liù diǎn sān kè", translation: "6h45 (alternative)", example: "Il arrive à six heures trois quarts." },
             { char: "好", pinyin: "hǎo", translation: "bien", example: "Je vais très bien." },
@@ -730,6 +730,8 @@
 
             removeEventListenersFromActiveCard(); 
 
+            const audioZone = activeCard.querySelector('.audio-zone');
+
             // --- Mouse Events ---
             const mousedownHandler = (e) => {
                 if (e.button === 0) { 
@@ -787,7 +789,6 @@
                     const direction = deltaX > 0 ? 'right' : 'left';
                     swipeCard(direction);
                 } else if (isTap) { 
-                    // Apply debounce for mouse clicks too for consistency, though less critical
                     if (!tapTimeout) {
                         handleCardInteraction(e);
                         tapTimeout = setTimeout(() => {
@@ -856,7 +857,6 @@
                     const direction = deltaX > 0 ? 'right' : 'left';
                     swipeCard(direction);
                 } else if (isTap) { 
-                    // Apply debounce for touch taps
                     if (!tapTimeout) {
                         handleCardInteraction(e);
                         tapTimeout = setTimeout(() => {
@@ -868,33 +868,41 @@
                 }
             };
             
-            // Prevent phantom clicks after touch events
-            const clickHandler = (e) => {
-                e.preventDefault(); 
-                e.stopPropagation(); 
+            // Re-adding a more specific click handler for the audio zone only
+            // This prevents the "phantom click" from affecting the whole card
+            // but allows the audio zone to work.
+            const audioZoneClickHandler = (e) => {
+                e.preventDefault(); // Prevent default click action (like phantom click)
+                e.stopPropagation(); // Stop propagation to the card itself
+
+                const currentCardDataIndex = parseInt(activeCard.dataset.cardDataIndex);
+                if (!isNaN(currentCardDataIndex) && flashcardsData[currentCardDataIndex]) {
+                    if (flashcardsData[currentCardDataIndex].char) { 
+                        const charToSpeak = flashcardsData[currentCardDataIndex].char;
+                        const utterance = new SpeechSynthesisUtterance(charToSpeak);
+                        utterance.lang = 'zh-CN'; // Set language to Chinese
+                        speechSynthesis.speak(utterance);
+                    } else {
+                        console.warn("No character available for audio playback.");
+                    }
+                }
             };
-            activeCard.addEventListener('click', clickHandler, true); // Use capture phase
-            currentCardListeners.click = clickHandler;
+
+            // Add listener directly to the audio zone
+            if (audioZone) {
+                audioZone.addEventListener('click', audioZoneClickHandler);
+                currentCardListeners.audioZoneClick = audioZoneClickHandler;
+            }
 
 
             const handleCardInteraction = (e) => {
-                const audioZone = activeCard.querySelector('.audio-zone');
                 // Check if the interaction originated from within the audio zone
+                // We've moved the audio playback logic to audioZoneClickHandler
+                // so this check is primarily to prevent card stage change if audio zone was targeted.
+                const audioZone = activeCard.querySelector('.audio-zone');
                 if (audioZone && audioZone.contains(e.target)) {
-                    e.stopPropagation(); 
-                    const currentCardDataIndex = parseInt(activeCard.dataset.cardDataIndex);
-                    if (!isNaN(currentCardDataIndex) && flashcardsData[currentCardDataIndex]) {
-                         if (flashcardsData[currentCardDataIndex].char) { 
-                             // Using Text-to-Speech directly if no audio file exists
-                             const charToSpeak = flashcardsData[currentCardDataIndex].char;
-                             const utterance = new SpeechSynthesisUtterance(charToSpeak);
-                             utterance.lang = 'zh-CN'; // Set language to Chinese
-                             speechSynthesis.speak(utterance);
-                         } else {
-                             console.warn("No character available for audio playback.");
-                         }
-                    }
-                    return; // Prevent card rotation if audio zone is clicked/tapped
+                    e.stopPropagation(); // Ensure click on audio zone doesn't bubble up to card logic
+                    return; 
                 }
                 
                 // If it's a tap/click and not on the audio zone, rotate the card
@@ -905,23 +913,24 @@
         }
 
         function removeEventListenersFromActiveCard() {
-            if (currentCardListeners.mousedown) {
-                const activeCard = flashcardStack.querySelector('.flashcard.active');
-                if (activeCard) activeCard.removeEventListener('mousedown', currentCardListeners.mousedown);
-                document.removeEventListener('mousemove', currentCardListeners.mousemoveHandler); 
-                document.removeEventListener('mouseup', currentCardListeners.globalMouseupHandler);
+            const activeCard = flashcardStack.querySelector('.flashcard.active');
+            if (!activeCard) return;
+
+            // Remove previous listeners
+            if (currentCardListeners.mousedown) activeCard.removeEventListener('mousedown', currentCardListeners.mousedown);
+            document.removeEventListener('mousemove', currentCardListeners.mousemoveHandler); 
+            document.removeEventListener('mouseup', currentCardListeners.globalMouseupHandler);
+            
+            if (currentCardListeners.touchstart) activeCard.removeEventListener('touchstart', currentCardListeners.touchstart);
+            document.removeEventListener('touchmove', currentCardListeners.touchmoveHandler); 
+            document.removeEventListener('touchend', currentCardListeners.globalTouchendHandler);
+            document.removeEventListener('touchcancel', currentCardListeners.globalTouchendHandler);
+
+            const audioZone = activeCard.querySelector('.audio-zone');
+            if (audioZone && currentCardListeners.audioZoneClick) {
+                audioZone.removeEventListener('click', currentCardListeners.audioZoneClick);
             }
-            if (currentCardListeners.touchstart) {
-                const activeCard = flashcardStack.querySelector('.flashcard.active');
-                if (activeCard) activeCard.removeEventListener('touchstart', currentCardListeners.touchstart);
-                document.removeEventListener('touchmove', currentCardListeners.touchmoveHandler); 
-                document.removeEventListener('touchend', currentCardListeners.globalTouchendHandler);
-                document.removeEventListener('touchcancel', currentCardListeners.globalTouchendHandler);
-            }
-            if (currentCardListeners.click) {
-                const activeCard = flashcardStack.querySelector('.flashcard.active');
-                if (activeCard) activeCard.removeEventListener('click', currentCardListeners.click, true);
-            }
+
             currentCardListeners = {}; // Clear the stored listeners
         }
         
